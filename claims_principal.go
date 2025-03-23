@@ -1,4 +1,4 @@
-package mux
+package claims
 
 const (
 	// Subject of the token (e.g., user ID)
