@@ -35,7 +35,7 @@ const (
 	scope = "scope"
 )
 
-type ClaimsPrincipal interface {
+type Principal interface {
 	// Unique identifier for the subject (e.g., user ID)
 	Subject() string
 
@@ -74,55 +74,55 @@ type ClaimsPrincipal interface {
 	JWT() string
 }
 
-func NewClaimsPrincipal(claims map[string]Claim) ClaimsPrincipal {
-	return &claimsPrincipal{
+func NewClaimsPrincipal(claims map[string]Claim) Principal {
+	return &principal{
 		claims: claims,
 	}
 }
 
-type claimsPrincipal struct {
+type principal struct {
 	claims map[string]Claim
 }
 
-func (cp *claimsPrincipal) Subject() string {
+func (cp *principal) Subject() string {
 	return cp.getClaimString(sub)
 }
 
-func (cp *claimsPrincipal) Issuer() string {
+func (cp *principal) Issuer() string {
 	return cp.getClaimString(iss)
 }
 
-func (cp *claimsPrincipal) Audience() []string {
+func (cp *principal) Audience() []string {
 	if claim, exists := cp.claims[aud]; exists {
 		return claim.Values(",")
 	}
 	return nil
 }
 
-func (cp *claimsPrincipal) ExpirationTime() int64 {
+func (cp *principal) ExpirationTime() int64 {
 	return cp.getClaimInt64(exp)
 }
 
-func (cp *claimsPrincipal) NotBefore() int64 {
+func (cp *principal) NotBefore() int64 {
 	return cp.getClaimInt64(nbf)
 }
 
-func (cp *claimsPrincipal) IssuedAt() int64 {
+func (cp *principal) IssuedAt() int64 {
 	return cp.getClaimInt64(iat)
 }
 
-func (cp *claimsPrincipal) JWTI() string {
+func (cp *principal) JWTI() string {
 	return cp.getClaimString(jti)
 }
 
-func (cp *claimsPrincipal) Scopes() []string {
+func (cp *principal) Scopes() []string {
 	if claim, exists := cp.claims[scope]; exists {
 		return claim.Values(",")
 	}
 	return nil
 }
 
-func (cp *claimsPrincipal) Roles() []string {
+func (cp *principal) Roles() []string {
 	if claim, exists := cp.claims[roles]; exists {
 		return claim.Values(",")
 	}
@@ -130,33 +130,33 @@ func (cp *claimsPrincipal) Roles() []string {
 	return nil
 }
 
-func (cp *claimsPrincipal) Email() string {
+func (cp *principal) Email() string {
 	return cp.getClaimString(email)
 }
 
-func (cp *claimsPrincipal) Username() string {
+func (cp *principal) Username() string {
 	return cp.getClaimString(name)
 }
 
-func (cp *claimsPrincipal) CustomClaim(name string) Claim {
+func (cp *principal) CustomClaim(name string) Claim {
 	if claim, exists := cp.claims[name]; exists {
 		return claim
 	}
 	return NewClaim("", "")
 }
 
-func (cp *claimsPrincipal) Claims() map[string]Claim {
+func (cp *principal) Claims() map[string]Claim {
 	return cp.claims
 }
 
-func (cp *claimsPrincipal) getClaimString(claimName string) string {
+func (cp *principal) getClaimString(claimName string) string {
 	if claim, exists := cp.claims[claimName]; exists {
 		return claim.Value()
 	}
 	return ""
 }
 
-func (cp *claimsPrincipal) getClaimInt64(claimName string) int64 {
+func (cp *principal) getClaimInt64(claimName string) int64 {
 	if claim, exists := cp.claims[claimName]; exists {
 		if value, ok := claim.Int64Value(); ok {
 			return value
@@ -165,7 +165,7 @@ func (cp *claimsPrincipal) getClaimInt64(claimName string) int64 {
 	return 0
 }
 
-func (cp *claimsPrincipal) JWT() string {
+func (cp *principal) JWT() string {
 
 	// todo return the JWT string if available in the claims
 	return ""
