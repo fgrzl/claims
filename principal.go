@@ -32,7 +32,7 @@ const (
 	roles = "roles"
 
 	// Scopes or permissions granted to the subject
-	scope = "scope"
+	scope = "scopes"
 )
 
 type Principal interface {
