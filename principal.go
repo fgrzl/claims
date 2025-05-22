@@ -69,6 +69,9 @@ type Principal interface {
 	// Retrieve a custom claim by name
 	CustomClaim(name string) Claim
 
+	// Retrieve a custom claim by name
+	CustomClaimValue(name string) string
+
 	Claims() map[string]Claim
 
 	JWT() string
@@ -143,6 +146,10 @@ func (cp *principal) CustomClaim(name string) Claim {
 		return claim
 	}
 	return NewClaim("", "")
+}
+
+func (cp *principal) CustomClaimValue(name string) string {
+	return cp.CustomClaim(name).Value()
 }
 
 func (cp *principal) Claims() map[string]Claim {

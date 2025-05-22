@@ -3,6 +3,7 @@ package jwtkit
 import (
 	"fmt"
 
+	"github.com/fgrzl/claims"
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -10,7 +11,7 @@ type HMAC256Validator struct {
 	Secret []byte
 }
 
-func (tv *HMAC256Validator) Validate(tokenStr string) (jwt.MapClaims, error) {
+func (tv *HMAC256Validator) Validate(tokenStr string) (claims.Principal, error) {
 	// Initialize parser with strict decoding
 	parser := jwt.NewParser(jwt.WithStrictDecoding())
 
@@ -34,5 +35,5 @@ func (tv *HMAC256Validator) Validate(tokenStr string) (jwt.MapClaims, error) {
 		return nil, err
 	}
 
-	return claims, nil
+	return FromMapClaims(claims), nil
 }

@@ -15,13 +15,13 @@ func TestHMAC256SignAndValidate(t *testing.T) {
 
 	claims := jwt.MapClaims{"tenant_id": "tenant-xyz"}
 
-	token, err := signer.CreateToken(claims, time.Minute)
+	token, err := signer.CreateToken(FromMapClaims(claims), time.Minute)
 	require.NoError(t, err)
 	require.NotEmpty(t, token)
 
-	validatedClaims, err := validator.Validate(token)
+	user, err := validator.Validate(token)
 	require.NoError(t, err)
-	require.Equal(t, "tenant-xyz", validatedClaims["tenant_id"])
+	require.Equal(t, "tenant-xyz", user.CustomClaimValue("tenant_id"))
 }
 
 func TestHMAC256ExpiredToken(t *testing.T) {
@@ -31,7 +31,7 @@ func TestHMAC256ExpiredToken(t *testing.T) {
 
 	claims := jwt.MapClaims{"tenant_id": "tenant-expired"}
 
-	token, err := signer.CreateToken(claims, 1*time.Second)
+	token, err := signer.CreateToken(FromMapClaims(claims), 1*time.Second)
 	require.NoError(t, err)
 
 	time.Sleep(2 * time.Second)
@@ -47,7 +47,7 @@ func TestHMAC256InvalidSignature(t *testing.T) {
 
 	claims := jwt.MapClaims{"tenant_id": "invalid-sig"}
 
-	token, err := signer.CreateToken(claims, time.Minute)
+	token, err := signer.CreateToken(FromMapClaims(claims), time.Minute)
 	require.NoError(t, err)
 
 	_, err = validator.Validate(token)

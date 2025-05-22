@@ -3,13 +3,13 @@ package jwtkit
 import (
 	"time"
 
-	"github.com/golang-jwt/jwt/v5"
+	"github.com/fgrzl/claims"
 )
 
 type Validator interface {
-	Validate(tokenStr string) (jwt.MapClaims, error)
+	Validate(tokenStr string) (claims.Principal, error)
 }
 
 type Signer interface {
-	CreateToken(claims jwt.MapClaims, ttl time.Duration) (string, error)
+	CreateToken(principal claims.Principal, ttl time.Duration) (string, error)
 }

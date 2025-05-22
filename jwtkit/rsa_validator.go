@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/fgrzl/claims"
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -27,7 +28,7 @@ func LoadPublicKey(path string) (*rsa.PublicKey, error) {
 	return x509.ParsePKCS1PublicKey(block.Bytes)
 }
 
-func (v *RSAValidator) Validate(tokenStr string) (jwt.MapClaims, error) {
+func (v *RSAValidator) Validate(tokenStr string) (claims.Principal, error) {
 	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (any, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
 			return nil, jwt.ErrSignatureInvalid
@@ -46,5 +47,5 @@ func (v *RSAValidator) Validate(tokenStr string) (jwt.MapClaims, error) {
 		return nil, err
 	}
 
-	return claims, nil
+	return FromMapClaims(claims), nil
 }

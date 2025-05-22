@@ -24,12 +24,12 @@ func TestRSASignAndValidate(t *testing.T) {
 
 	claims := jwt.MapClaims{"tenant_id": "tenant-xyz"}
 
-	token, err := signer.CreateToken(claims, time.Minute)
+	token, err := signer.CreateToken(FromMapClaims(claims), time.Minute)
 	require.NoError(t, err)
 
-	validatedClaims, err := validator.Validate(token)
+	user, err := validator.Validate(token)
 	require.NoError(t, err)
-	require.Equal(t, "tenant-xyz", validatedClaims["tenant_id"])
+	require.Equal(t, "tenant-xyz", user.CustomClaimValue("tenant_id"))
 }
 
 func TestRSAExpiredToken(t *testing.T) {
@@ -40,7 +40,7 @@ func TestRSAExpiredToken(t *testing.T) {
 
 	claims := jwt.MapClaims{"tenant_id": "expired-tenant"}
 
-	token, err := signer.CreateToken(claims, 1*time.Second)
+	token, err := signer.CreateToken(FromMapClaims(claims), 1*time.Second)
 	require.NoError(t, err)
 
 	time.Sleep(2 * time.Second)
@@ -59,7 +59,7 @@ func TestRSAInvalidSignature(t *testing.T) {
 
 	claims := jwt.MapClaims{"tenant_id": "bad-sig"}
 
-	token, err := signer.CreateToken(claims, time.Minute)
+	token, err := signer.CreateToken(FromMapClaims(claims), time.Minute)
 	require.NoError(t, err)
 
 	_, err = validator.Validate(token)

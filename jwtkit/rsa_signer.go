@@ -8,6 +8,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/fgrzl/claims"
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -27,13 +28,8 @@ type RSASigner struct {
 	PrivateKey *rsa.PrivateKey
 }
 
-func (s *RSASigner) CreateToken(claims jwt.MapClaims, ttl time.Duration) (string, error) {
-
-	// Inject 'exp' if not already set
-	if _, ok := claims["exp"]; !ok && ttl > 0 {
-		claims["exp"] = time.Now().Add(ttl).Unix()
-	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
+func (s *RSASigner) CreateToken(principal claims.Principal, ttl time.Duration) (string, error) {
+	mapClaims := ToMapClaims(principal, ttl)
+	token := jwt.NewWithClaims(jwt.SigningMethodRS256, mapClaims)
 	return token.SignedString(s.PrivateKey)
 }
