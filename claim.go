@@ -7,25 +7,6 @@ import (
 	"github.com/google/uuid"
 )
 
-type ClaimList = []Claim
-type ClaimSet = map[string]Claim
-
-func ToClaimSet(claimList ClaimList) ClaimSet {
-	claimSet := make(ClaimSet, len(claimList))
-	for _, c := range claimList {
-		claimSet[c.Name()] = c
-	}
-	return claimSet
-}
-
-func ToClaimList(claimSet ClaimSet) ClaimList {
-	claimList := make([]Claim, len(claimSet))
-	for _, v := range claimSet {
-		claimList = append(claimList, v)
-	}
-	return claimList
-}
-
 type Claim interface {
 	// Returns the name of the claim (e.g., "sub", "iss", "aud").
 	Name() string

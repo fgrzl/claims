@@ -7,94 +7,81 @@ import (
 )
 
 const (
-	// Subject of the token (e.g., user ID)
-	sub = "sub"
-
-	// Issuer of the token
-	iss = "iss"
-
-	// Audience for which the token is intended
-	aud = "aud"
-
-	// Expiration time of the token (UNIX timestamp)
-	exp = "exp"
-
-	// Not Before time (UNIX timestamp)
-	nbf = "nbf"
-
-	// Issued At time (UNIX timestamp)
-	iat = "iat"
-
-	// JWT ID, a unique identifier for the token
-	jti = "jti"
-
-	// Email of the subject (if included in the claim)
-	email = "email"
-
-	// Name of the subject (if included in the claim)
-	name = "name"
-
-	// Roles assigned to the subject (if applicable)
-	roles = "roles"
-
-	// Scopes or permissions granted to the subject
-	scope = "scopes"
+	// Standard JWT claim names
+	sub   = "sub"    // Subject
+	iss   = "iss"    // Issuer
+	aud   = "aud"    // Audience
+	exp   = "exp"    // Expiration time
+	nbf   = "nbf"    // Not before
+	iat   = "iat"    // Issued at
+	jti   = "jti"    // JWT ID
+	email = "email"  // Email of subject
+	name  = "name"   // Name of subject
+	roles = "roles"  // Roles assigned
+	scope = "scopes" // Scopes granted
 )
 
+// Principal represents an authenticated identity with associated claims.
 type Principal interface {
-	// Unique identifier for the subject (e.g., user ID)
+	// Subject returns the unique identifier for the subject (e.g., user ID).
 	Subject() string
 
-	// Entity that issued the token
+	// Issuer returns the entity that issued the token.
 	Issuer() string
 
-	// Intended audience(s) of the token
+	// Audience returns the intended audience(s) of the token.
 	Audience() []string
 
-	// Token expiration time (Unix timestamp)
+	// ExpirationTime returns the token expiration time (Unix timestamp).
 	ExpirationTime() int64
 
-	// Time before which the token is not valid (Unix timestamp)
+	// NotBefore returns the time before which the token is not valid (Unix timestamp).
 	NotBefore() int64
 
-	// Time at which the token was issued (Unix timestamp)
+	// IssuedAt returns the time at which the token was issued (Unix timestamp).
 	IssuedAt() int64
 
-	// List of scopes or permissions granted
+	// JWTI returns the unique token ID.
+	JWTI() string
+
+	// Scopes returns the list of scopes or permissions granted.
 	Scopes() []string
 
-	// Roles assigned to the subject
+	// Roles returns the roles assigned to the subject.
 	Roles() []string
 
-	// Email address of the subject
+	// Email returns the email address of the subject.
 	Email() string
 
-	// Username of the subject
+	// Username returns the human-readable name of the subject.
 	Username() string
 
-	// Retrieve a custom claim by name
+	// CustomClaim retrieves a custom claim by name.
 	CustomClaim(name string) Claim
 
-	// Retrieve a custom claim by name
+	// CustomClaimValue returns the string value of a custom claim.
 	CustomClaimValue(name string) string
 
-	Claims() map[string]Claim
+	// Claims returns a copy of the underlying claim set.
+	Claims() ClaimSet
 }
 
+// NewPrincipalFromList constructs a Principal from a ClaimList and optional TTL for exp.
 func NewPrincipalFromList(claimList ClaimList, ttl *time.Duration) Principal {
 	claimSet := ToClaimSet(claimList)
 	return NewPrincipal(claimSet, ttl)
 }
 
+// NewPrincipal constructs a Principal from a ClaimSet and optional TTL for exp.
 func NewPrincipal(claimSet ClaimSet, ttl *time.Duration) Principal {
+	cloneSet := make(ClaimSet, len(claimSet))
+	maps.Copy(cloneSet, claimSet)
+
 	if ttl != nil {
 		exp := time.Now().Add(*ttl).Unix()
 		expStr := strconv.FormatInt(exp, 10)
-		claimSet["exp"] = NewClaim("exp", expStr)
+		cloneSet["exp"] = NewClaim("exp", expStr)
 	}
-
-	cloneSet := make(ClaimSet, len(claimSet))
-	maps.Copy(cloneSet, claimSet)
 
 	return &principal{
 		claimSet: cloneSet,
@@ -105,60 +92,71 @@ type principal struct {
 	claimSet ClaimSet
 }
 
+// Subject returns the "sub" claim.
 func (cp *principal) Subject() string {
 	return cp.getClaimString(sub)
 }
 
+// Issuer returns the "iss" claim.
 func (cp *principal) Issuer() string {
 	return cp.getClaimString(iss)
 }
 
+// Audience returns the "aud" claim as a string slice.
 func (cp *principal) Audience() []string {
 	if claim, exists := cp.claimSet[aud]; exists {
 		return claim.Values(",")
 	}
-	return nil
+	return []string{}
 }
 
+// ExpirationTime returns the "exp" claim as int64.
 func (cp *principal) ExpirationTime() int64 {
 	return cp.getClaimInt64(exp)
 }
 
+// NotBefore returns the "nbf" claim as int64.
 func (cp *principal) NotBefore() int64 {
 	return cp.getClaimInt64(nbf)
 }
 
+// IssuedAt returns the "iat" claim as int64.
 func (cp *principal) IssuedAt() int64 {
 	return cp.getClaimInt64(iat)
 }
 
+// JWTI returns the "jti" claim.
 func (cp *principal) JWTI() string {
 	return cp.getClaimString(jti)
 }
 
+// Scopes returns the "scopes" claim as a string slice.
 func (cp *principal) Scopes() []string {
 	if claim, exists := cp.claimSet[scope]; exists {
 		return claim.Values(",")
 	}
-	return nil
+	return []string{}
 }
 
+// Roles returns the "roles" claim as a string slice.
 func (cp *principal) Roles() []string {
 	if claim, exists := cp.claimSet[roles]; exists {
 		return claim.Values(",")
 	}
-
-	return nil
+	return []string{}
 }
 
+// Email returns the "email" claim.
 func (cp *principal) Email() string {
 	return cp.getClaimString(email)
 }
 
+// Username returns the "name" claim.
 func (cp *principal) Username() string {
 	return cp.getClaimString(name)
 }
 
+// CustomClaim returns a claim by name or an empty claim if not present.
 func (cp *principal) CustomClaim(name string) Claim {
 	if claim, exists := cp.claimSet[name]; exists {
 		return claim
@@ -166,16 +164,19 @@ func (cp *principal) CustomClaim(name string) Claim {
 	return NewClaim("", "")
 }
 
+// CustomClaimValue returns the string value of a named claim.
 func (cp *principal) CustomClaimValue(name string) string {
 	return cp.CustomClaim(name).Value()
 }
 
+// Claims returns a copy of the underlying claim set.
 func (cp *principal) Claims() ClaimSet {
 	cloneSet := make(ClaimSet, len(cp.claimSet))
 	maps.Copy(cloneSet, cp.claimSet)
 	return cloneSet
 }
 
+// getClaimString safely retrieves a string claim.
 func (cp *principal) getClaimString(claimName string) string {
 	if claim, exists := cp.claimSet[claimName]; exists {
 		return claim.Value()
@@ -183,6 +184,7 @@ func (cp *principal) getClaimString(claimName string) string {
 	return ""
 }
 
+// getClaimInt64 safely retrieves an int64 claim.
 func (cp *principal) getClaimInt64(claimName string) int64 {
 	if claim, exists := cp.claimSet[claimName]; exists {
 		if value, ok := claim.Int64Value(); ok {
