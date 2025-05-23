@@ -23,28 +23,28 @@ func ToMapClaims(principal claims.Principal, ttl time.Duration) jwt.MapClaims {
 }
 
 func FromMapClaims(raw jwt.MapClaims) claims.Principal {
-	claimsMap := make(map[string]claims.Claim, len(raw))
+	claimSet := make(claims.ClaimSet, len(raw))
 
 	for k, v := range raw {
 		switch val := v.(type) {
 		case string:
-			claimsMap[k] = claims.NewClaim(k, val)
+			claimSet[k] = claims.NewClaim(k, val)
 		case float64:
-			claimsMap[k] = claims.NewClaim(k, fmt.Sprintf("%v", val))
+			claimSet[k] = claims.NewClaim(k, fmt.Sprintf("%v", val))
 		case []interface{}:
 			strs := make([]string, 0, len(val))
 			for _, item := range val {
 				strs = append(strs, fmt.Sprint(item))
 			}
-			claimsMap[k] = claims.NewClaim(k, strings.Join(strs, ","))
+			claimSet[k] = claims.NewClaim(k, strings.Join(strs, ","))
 		case interface{}:
-			claimsMap[k] = claims.NewClaim(k, fmt.Sprint(val))
+			claimSet[k] = claims.NewClaim(k, fmt.Sprint(val))
 		default:
 			// unknown type, skip
 		}
 	}
 
-	p := claims.NewClaimsPrincipal(claimsMap)
+	p := claims.NewPrincipal(claimSet, nil)
 	return p
 }
 

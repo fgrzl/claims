@@ -1,5 +1,10 @@
 package claims
 
+import (
+	"strconv"
+	"time"
+)
+
 const (
 	// Subject of the token (e.g., user ID)
 	sub = "sub"
@@ -73,18 +78,27 @@ type Principal interface {
 	CustomClaimValue(name string) string
 
 	Claims() map[string]Claim
-
-	JWT() string
 }
 
-func NewClaimsPrincipal(claims map[string]Claim) Principal {
+func NewPrincipalFromList(claimList ClaimList, ttl *time.Duration) Principal {
+	claimSet := ToClaimSet(claimList)
+	return NewPrincipal(claimSet, ttl)
+}
+
+func NewPrincipal(claimSet ClaimSet, ttl *time.Duration) Principal {
+	if ttl != nil {
+		exp := time.Now().Add(*ttl).Unix()
+		expStr := strconv.FormatInt(exp, 10)
+		claimSet["exp"] = NewClaim("exp", expStr)
+	}
+
 	return &principal{
-		claims: claims,
+		claims: claimSet,
 	}
 }
 
 type principal struct {
-	claims map[string]Claim
+	claims ClaimSet
 }
 
 func (cp *principal) Subject() string {
@@ -170,10 +184,4 @@ func (cp *principal) getClaimInt64(claimName string) int64 {
 		}
 	}
 	return 0
-}
-
-func (cp *principal) JWT() string {
-
-	// todo return the JWT string if available in the claims
-	return ""
 }
