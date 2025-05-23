@@ -11,14 +11,25 @@ import (
 
 func ToMapClaims(principal claims.Principal, ttl time.Duration) jwt.MapClaims {
 	mapClaims := jwt.MapClaims{}
+
 	for k, v := range principal.Claims() {
-		mapClaims[k] = v.Value()
+		switch k {
+		case "exp", "nbf", "iat":
+			if floatVal, ok := v.Float64Value(); ok {
+				mapClaims[k] = floatVal
+			}
+		case "roles", "scopes":
+			mapClaims[k] = v.Values(",")
+		default:
+			mapClaims[k] = v.Value()
+		}
 	}
 
-	// Inject 'exp' if not already set
+	// Inject 'exp' if not already set and TTL is positive
 	if _, ok := mapClaims["exp"]; !ok && ttl > 0 {
-		mapClaims["exp"] = time.Now().Add(ttl).Unix()
+		mapClaims["exp"] = float64(time.Now().Add(ttl).Unix())
 	}
+
 	return mapClaims
 }
 

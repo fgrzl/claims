@@ -26,6 +26,9 @@ type Claim interface {
 	// Returns the value of the claim as an int64, if applicable.
 	Int64Value() (int64, bool)
 
+	// Returns the value of the claim as an float64, if applicable.
+	Float64Value() (float64, bool)
+
 	// Returns the value of the claim as a bool, if applicable.
 	BoolValue() (bool, bool)
 
@@ -78,6 +81,18 @@ func (c *claim) Int64Value() (int64, bool) {
 		return 0, false
 	}
 	return r, true
+}
+
+func (c *claim) Float64Value() (float64, bool) {
+	if c == nil || c.value == "" {
+		return 0, false
+	}
+
+	v, err := strconv.ParseFloat(c.value, 64)
+	if err != nil {
+		return 0, false
+	}
+	return v, true
 }
 
 func (c *claim) BoolValue() (bool, bool) {
