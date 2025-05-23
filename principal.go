@@ -1,6 +1,7 @@
 package claims
 
 import (
+	"maps"
 	"strconv"
 	"time"
 )
@@ -92,13 +93,16 @@ func NewPrincipal(claimSet ClaimSet, ttl *time.Duration) Principal {
 		claimSet["exp"] = NewClaim("exp", expStr)
 	}
 
+	cloneSet := make(ClaimSet, len(claimSet))
+	maps.Copy(cloneSet, claimSet)
+
 	return &principal{
-		claims: claimSet,
+		claimSet: cloneSet,
 	}
 }
 
 type principal struct {
-	claims ClaimSet
+	claimSet ClaimSet
 }
 
 func (cp *principal) Subject() string {
@@ -110,7 +114,7 @@ func (cp *principal) Issuer() string {
 }
 
 func (cp *principal) Audience() []string {
-	if claim, exists := cp.claims[aud]; exists {
+	if claim, exists := cp.claimSet[aud]; exists {
 		return claim.Values(",")
 	}
 	return nil
@@ -133,14 +137,14 @@ func (cp *principal) JWTI() string {
 }
 
 func (cp *principal) Scopes() []string {
-	if claim, exists := cp.claims[scope]; exists {
+	if claim, exists := cp.claimSet[scope]; exists {
 		return claim.Values(",")
 	}
 	return nil
 }
 
 func (cp *principal) Roles() []string {
-	if claim, exists := cp.claims[roles]; exists {
+	if claim, exists := cp.claimSet[roles]; exists {
 		return claim.Values(",")
 	}
 
@@ -156,7 +160,7 @@ func (cp *principal) Username() string {
 }
 
 func (cp *principal) CustomClaim(name string) Claim {
-	if claim, exists := cp.claims[name]; exists {
+	if claim, exists := cp.claimSet[name]; exists {
 		return claim
 	}
 	return NewClaim("", "")
@@ -166,19 +170,21 @@ func (cp *principal) CustomClaimValue(name string) string {
 	return cp.CustomClaim(name).Value()
 }
 
-func (cp *principal) Claims() map[string]Claim {
-	return cp.claims
+func (cp *principal) Claims() ClaimSet {
+	cloneSet := make(ClaimSet, len(cp.claimSet))
+	maps.Copy(cloneSet, cp.claimSet)
+	return cloneSet
 }
 
 func (cp *principal) getClaimString(claimName string) string {
-	if claim, exists := cp.claims[claimName]; exists {
+	if claim, exists := cp.claimSet[claimName]; exists {
 		return claim.Value()
 	}
 	return ""
 }
 
 func (cp *principal) getClaimInt64(claimName string) int64 {
-	if claim, exists := cp.claims[claimName]; exists {
+	if claim, exists := cp.claimSet[claimName]; exists {
 		if value, ok := claim.Int64Value(); ok {
 			return value
 		}
