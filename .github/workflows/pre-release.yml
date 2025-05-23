@@ -54,3 +54,25 @@ jobs:
         run: |
           TAG=${{ steps.version.outputs.semVer }}
           curl -sSf "https://proxy.golang.org/github.com/${{ github.repository }}/@v/v$TAG.info"
+
+      - name: Install semver tool
+        run: npm install -g semver
+        
+      - name: Prune Older Pre-Release Tags
+        env:
+          CURRENT_VERSION: ${{ steps.version.outputs.semVer }}
+        run: |
+          echo "Current version: $CURRENT_VERSION"
+          git fetch --tags
+
+          tags=$(git tag --list "v*" | grep '-' || true)
+
+          for tag in $tags; do
+            plain=${tag#v}
+            if semver lt "$plain" "$CURRENT_VERSION"; then
+              echo "Deleting tag: $tag (lt $CURRENT_VERSION)"
+              git push origin :refs/tags/$tag
+            else
+              echo "Keeping tag: $tag"
+            fi
+          done
