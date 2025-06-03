@@ -1,9 +1,5 @@
 package claims
 
-import (
-	"maps"
-)
-
 // Principal represents an authenticated identity with associated claims.
 type Principal interface {
 	// Subject returns the unique identifier for the subject (e.g., user ID).
@@ -46,126 +42,45 @@ type Principal interface {
 	CustomClaimValue(name string) string
 
 	// Claims returns a copy of the underlying claim set.
-	Claims() ClaimSet
+	Claims() *ClaimSet
 }
 
-// NewPrincipalFromList constructs a Principal from a ClaimList and optional TTL for exp.
+// NewPrincipalFromList constructs a Principal from a ClaimList.
 func NewPrincipalFromList(claimList ClaimList) Principal {
-	claimSet := ToClaimSet(claimList)
-	return NewPrincipal(claimSet)
+	return NewPrincipal(ToClaimSet(claimList))
 }
 
-// NewPrincipal constructs a Principal from a ClaimSet and optional TTL for exp.
-func NewPrincipal(claimSet ClaimSet) Principal {
-	cloneSet := make(ClaimSet, len(claimSet))
-	maps.Copy(cloneSet, claimSet)
-	return &principal{
-		claimSet: cloneSet,
+// NewPrincipal constructs a Principal from a ClaimSet.
+func NewPrincipal(claimSet *ClaimSet) Principal {
+	// Deep copy
+	clone := &ClaimSet{state: make(map[string]Claim, len(claimSet.state))}
+	for k, v := range claimSet.state {
+		clone.state[k] = v
 	}
+	return &principal{claimSet: clone}
 }
 
 type principal struct {
-	claimSet ClaimSet
+	claimSet *ClaimSet
 }
 
-// Subject returns the "sub" claim.
-func (cp *principal) Subject() string {
-	return cp.getClaimString(sub)
-}
-
-// Issuer returns the "iss" claim.
-func (cp *principal) Issuer() string {
-	return cp.getClaimString(iss)
-}
-
-// Audience returns the "aud" claim as a string slice.
-func (cp *principal) Audience() []string {
-	if claim, exists := cp.claimSet[aud]; exists {
-		return claim.Values(",")
-	}
-	return []string{}
-}
-
-// ExpirationTime returns the "exp" claim as int64.
-func (cp *principal) ExpirationTime() int64 {
-	return cp.getClaimInt64(exp)
-}
-
-// NotBefore returns the "nbf" claim as int64.
-func (cp *principal) NotBefore() int64 {
-	return cp.getClaimInt64(nbf)
-}
-
-// IssuedAt returns the "iat" claim as int64.
-func (cp *principal) IssuedAt() int64 {
-	return cp.getClaimInt64(iat)
-}
-
-// JWTI returns the "jti" claim.
-func (cp *principal) JWTI() string {
-	return cp.getClaimString(jti)
-}
-
-// Scopes returns the "scopes" claim as a string slice.
-func (cp *principal) Scopes() []string {
-	if claim, exists := cp.claimSet[scope]; exists {
-		return claim.Values(",")
-	}
-	return []string{}
-}
-
-// Roles returns the "roles" claim as a string slice.
-func (cp *principal) Roles() []string {
-	if claim, exists := cp.claimSet[roles]; exists {
-		return claim.Values(",")
-	}
-	return []string{}
-}
-
-// Email returns the "email" claim.
-func (cp *principal) Email() string {
-	return cp.getClaimString(email)
-}
-
-// Username returns the "name" claim.
-func (cp *principal) Username() string {
-	return cp.getClaimString(name)
-}
-
-// CustomClaim returns a claim by name or an empty claim if not present.
+func (cp *principal) Subject() string       { return cp.claimSet.Subject() }
+func (cp *principal) Issuer() string        { return cp.claimSet.Issuer() }
+func (cp *principal) Audience() []string    { return cp.claimSet.Audience() }
+func (cp *principal) ExpirationTime() int64 { return cp.claimSet.ExpirationTime() }
+func (cp *principal) NotBefore() int64      { return cp.claimSet.NotBefore() }
+func (cp *principal) IssuedAt() int64       { return cp.claimSet.IssuedAt() }
+func (cp *principal) JWTI() string          { return cp.claimSet.JWTI() }
+func (cp *principal) Scopes() []string      { return cp.claimSet.Scopes() }
+func (cp *principal) Roles() []string       { return cp.claimSet.Roles() }
+func (cp *principal) Email() string         { return cp.claimSet.Email() }
+func (cp *principal) Username() string      { return cp.claimSet.Username() }
 func (cp *principal) CustomClaim(name string) Claim {
-	if claim, exists := cp.claimSet[name]; exists {
-		return claim
-	}
-	return NewClaim("", "")
+	return cp.claimSet.CustomClaim(name)
 }
-
-// CustomClaimValue returns the string value of a named claim.
 func (cp *principal) CustomClaimValue(name string) string {
-	return cp.CustomClaim(name).Value()
+	return cp.claimSet.CustomClaimValue(name)
 }
-
-// Claims returns a copy of the underlying claim set.
-func (cp *principal) Claims() ClaimSet {
-	cloneSet := make(ClaimSet, len(cp.claimSet))
-	maps.Copy(cloneSet, cp.claimSet)
-	return cloneSet
-}
-
-// getClaimString safely retrieves a string claim.
-func (cp *principal) getClaimString(claimName string) string {
-	if claim, exists := cp.claimSet[claimName]; exists {
-		return claim.Value()
-	}
-	return ""
-}
-
-// getClaimInt64 safely retrieves an int64 claim.
-func (cp *principal) getClaimInt64(claimName string) int64 {
-	if claim, exists := cp.claimSet[claimName]; exists {
-		if value, ok := claim.Int64Value(); ok {
-			return value
-		}
-	}
-	return 0
+func (cp *principal) Claims() *ClaimSet {
+	return cp.claimSet.Claims()
 }

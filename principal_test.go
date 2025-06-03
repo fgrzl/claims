@@ -50,7 +50,7 @@ func TestPrincipal_ClaimsCopy(t *testing.T) {
 	p := NewPrincipal(cs)
 
 	claimsMap := p.Claims()
-	claimsMap["sub"] = NewClaim("sub", "tampered")
+	claimsMap.SetSubject("tampered")
 
 	// Original Principal should not be affected
 	require.Equal(t, "copyme", p.Subject())

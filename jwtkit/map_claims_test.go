@@ -81,5 +81,3 @@ func TestJWTSignerBehavior(t *testing.T) {
 		})
 	}
 }
-
-var testSigningKey = []byte("test-secret")

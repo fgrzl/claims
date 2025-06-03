@@ -12,7 +12,8 @@ import (
 func ToMapClaims(principal claims.Principal, ttl time.Duration) jwt.MapClaims {
 	mapClaims := jwt.MapClaims{}
 
-	for k, v := range principal.Claims() {
+	claimSet := principal.Claims()
+	claimSet.Range(func(k string, v claims.Claim) {
 		switch k {
 		case "exp", "nbf", "iat":
 			if floatVal, ok := v.Float64Value(); ok {
@@ -24,7 +25,7 @@ func ToMapClaims(principal claims.Principal, ttl time.Duration) jwt.MapClaims {
 		default:
 			mapClaims[k] = v.Value()
 		}
-	}
+	})
 
 	// Inject 'exp' if not already set and TTL is positive
 	if _, ok := mapClaims["exp"]; !ok && ttl > 0 {
@@ -35,29 +36,26 @@ func ToMapClaims(principal claims.Principal, ttl time.Duration) jwt.MapClaims {
 }
 
 func FromMapClaims(raw jwt.MapClaims) claims.Principal {
-	claimSet := make(claims.ClaimSet, len(raw))
+	cs := claims.MakeClaimsSet(len(raw))
 
 	for k, v := range raw {
 		switch val := v.(type) {
 		case string:
-			claimSet[k] = claims.NewClaim(k, val)
+			cs.Set(k, val)
 		case float64:
-			claimSet[k] = claims.NewClaim(k, fmt.Sprintf("%v", val))
-		case []interface{}:
+			cs.Set(k, fmt.Sprintf("%v", val))
+		case []any:
 			strs := make([]string, 0, len(val))
 			for _, item := range val {
 				strs = append(strs, fmt.Sprint(item))
 			}
-			claimSet[k] = claims.NewClaim(k, strings.Join(strs, ","))
-		case interface{}:
-			claimSet[k] = claims.NewClaim(k, fmt.Sprint(val))
+			cs.Set(k, strings.Join(strs, ","))
 		default:
-			// unknown type, skip
+			cs.Set(k, fmt.Sprint(val))
 		}
 	}
 
-	p := claims.NewPrincipal(claimSet)
-	return p
+	return claims.NewPrincipal(cs)
 }
 
 // ValidateStandardClaims validates exp, nbf, and iat claims inside jwt.MapClaims.

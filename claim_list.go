@@ -10,10 +10,12 @@ func (cl ClaimList) Add(key, value string) ClaimList {
 	return append(cl, NewClaim(key, value))
 }
 
-func ToClaimSet(cl ClaimList) ClaimSet {
-	set := make(ClaimSet, len(cl))
+func ToClaimSet(cl ClaimList) *ClaimSet {
+	set := &ClaimSet{
+		state: make(map[string]Claim, len(cl)),
+	}
 	for _, c := range cl {
-		set[c.Name()] = c
+		set.state[c.Name()] = c
 	}
 	return set
 }
