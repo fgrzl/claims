@@ -1,25 +1,23 @@
 package claims
 
 import (
-	"encoding/json"
+	"sort"
 	"strconv"
 	"strings"
 )
 
 type ClaimSet map[string]Claim
 
-func NewClaimsSet(key, value string) ClaimSet {
-	return ClaimSet{key: NewClaim(key, value)}
+// NewClaimsSet creates a new ClaimSet with a subject claim.
+func NewClaimsSet(subject string) ClaimSet {
+	cs := ClaimSet{sub: NewClaim(sub, subject)}
+	return cs
 }
 
-// Set returns a copy of the ClaimSet with the new key/value inserted.
+// Set adds or updates a claim and returns the updated ClaimSet.
 func (cs ClaimSet) Set(key, value string) ClaimSet {
-	clone := make(ClaimSet, len(cs))
-	for k, v := range cs {
-		clone[k] = v
-	}
-	clone[key] = NewClaim(key, value)
-	return clone
+	(cs)[key] = NewClaim(key, value)
+	return cs
 }
 
 // Developer-friendly claim setters
@@ -32,14 +30,28 @@ func (cs ClaimSet) SetIssuedAt(value int64) ClaimSet   { return cs.Set(iat, int6
 func (cs ClaimSet) SetTokenID(value string) ClaimSet   { return cs.Set(jti, value) }
 func (cs ClaimSet) SetEmail(value string) ClaimSet     { return cs.Set(email, value) }
 func (cs ClaimSet) SetName(value string) ClaimSet      { return cs.Set(name, value) }
+
 func (cs ClaimSet) SetRoles(values ...string) ClaimSet {
 	return cs.Set(roles, strings.Join(values, ","))
 }
+
+func (cs ClaimSet) AppendRoles(values ...string) ClaimSet {
+	existing := strings.Split((cs)[roles].Value(), ",")
+	merged := mergeAndDedupe(existing, values)
+	return cs.Set(roles, strings.Join(merged, ","))
+}
+
 func (cs ClaimSet) SetScopes(values ...string) ClaimSet {
 	return cs.Set(scope, strings.Join(values, ","))
 }
 
-// Converts the claim set to a flat list.
+func (cs ClaimSet) AppendScopes(values ...string) ClaimSet {
+	existing := strings.Split((cs)[scope].Value(), ",")
+	merged := mergeAndDedupe(existing, values)
+	return cs.Set(scope, strings.Join(merged, ","))
+}
+
+// ToClaimList converts the ClaimSet to a ClaimList.
 func (cs ClaimSet) ToClaimList() ClaimList {
 	list := make(ClaimList, 0, len(cs))
 	for _, c := range cs {
@@ -48,29 +60,28 @@ func (cs ClaimSet) ToClaimList() ClaimList {
 	return list
 }
 
-// Marshal as a string map for JSON.
-func (cs ClaimSet) MarshalJSON() ([]byte, error) {
-	m := make(map[string]string, len(cs))
-	for k, v := range cs {
-		m[k] = v.Value()
-	}
-	return json.Marshal(m)
-}
-
-func (cs *ClaimSet) UnmarshalJSON(data []byte) error {
-	raw := map[string]string{}
-	if err := json.Unmarshal(data, &raw); err != nil {
-		return err
-	}
-
-	clone := make(ClaimSet, len(raw))
-	for k, v := range raw {
-		clone[k] = NewClaim(k, v)
-	}
-	*cs = clone
-	return nil
-}
-
 func int64ToString(i int64) string {
 	return strconv.FormatInt(i, 10)
+}
+
+func mergeAndDedupe(existing, additional []string) []string {
+	seen := make(map[string]struct{})
+	for _, v := range existing {
+		v = strings.TrimSpace(v)
+		if v != "" {
+			seen[v] = struct{}{}
+		}
+	}
+	for _, v := range additional {
+		v = strings.TrimSpace(v)
+		if v != "" {
+			seen[v] = struct{}{}
+		}
+	}
+	out := make([]string, 0, len(seen))
+	for k := range seen {
+		out = append(out, k)
+	}
+	sort.Strings(out)
+	return out
 }

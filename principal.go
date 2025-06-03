@@ -2,23 +2,6 @@ package claims
 
 import (
 	"maps"
-	"strconv"
-	"time"
-)
-
-const (
-	// Standard JWT claim names
-	sub   = "sub"    // Subject
-	iss   = "iss"    // Issuer
-	aud   = "aud"    // Audience
-	exp   = "exp"    // Expiration time
-	nbf   = "nbf"    // Not before
-	iat   = "iat"    // Issued at
-	jti   = "jti"    // JWT ID
-	email = "email"  // Email of subject
-	name  = "name"   // Name of subject
-	roles = "roles"  // Roles assigned
-	scope = "scopes" // Scopes granted
 )
 
 // Principal represents an authenticated identity with associated claims.
@@ -67,22 +50,15 @@ type Principal interface {
 }
 
 // NewPrincipalFromList constructs a Principal from a ClaimList and optional TTL for exp.
-func NewPrincipalFromList(claimList ClaimList, ttl *time.Duration) Principal {
+func NewPrincipalFromList(claimList ClaimList) Principal {
 	claimSet := ToClaimSet(claimList)
-	return NewPrincipal(claimSet, ttl)
+	return NewPrincipal(claimSet)
 }
 
 // NewPrincipal constructs a Principal from a ClaimSet and optional TTL for exp.
-func NewPrincipal(claimSet ClaimSet, ttl *time.Duration) Principal {
+func NewPrincipal(claimSet ClaimSet) Principal {
 	cloneSet := make(ClaimSet, len(claimSet))
 	maps.Copy(cloneSet, claimSet)
-
-	if ttl != nil {
-		exp := time.Now().Add(*ttl).Unix()
-		expStr := strconv.FormatInt(exp, 10)
-		cloneSet["exp"] = NewClaim("exp", expStr)
-	}
-
 	return &principal{
 		claimSet: cloneSet,
 	}

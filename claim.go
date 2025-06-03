@@ -1,6 +1,7 @@
 package claims
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -109,4 +110,14 @@ func (c *claim) UUIDValue() (uuid.UUID, bool) {
 		return r, false
 	}
 	return r, true
+}
+
+// MarshalJSON panics to prevent JSON encoding.
+func (*claim) MarshalJSON() ([]byte, error) {
+	return nil, fmt.Errorf("ClaimSet should not be marshaled to JSON")
+}
+
+// UnmarshalJSON panics to prevent JSON decoding.
+func (*claim) UnmarshalJSON([]byte) error {
+	return fmt.Errorf("ClaimSet should not be unmarshaled from JSON")
 }

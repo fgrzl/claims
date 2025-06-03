@@ -20,6 +20,7 @@ func ToMapClaims(principal claims.Principal, ttl time.Duration) jwt.MapClaims {
 			}
 		case "roles", "scopes":
 			mapClaims[k] = v.Values(",")
+
 		default:
 			mapClaims[k] = v.Value()
 		}
@@ -55,7 +56,7 @@ func FromMapClaims(raw jwt.MapClaims) claims.Principal {
 		}
 	}
 
-	p := claims.NewPrincipal(claimSet, nil)
+	p := claims.NewPrincipal(claimSet)
 	return p
 }
 
