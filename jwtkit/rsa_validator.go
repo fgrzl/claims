@@ -12,10 +12,12 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+// RSAValidator implements the Validator interface using RSA public key validation.
 type RSAValidator struct {
 	PublicKey *rsa.PublicKey
 }
 
+// LoadPublicKey loads an RSA public key from a PEM file.
 func LoadPublicKey(path string) (*rsa.PublicKey, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -28,6 +30,7 @@ func LoadPublicKey(path string) (*rsa.PublicKey, error) {
 	return x509.ParsePKCS1PublicKey(block.Bytes)
 }
 
+// Validate implements the Validator interface for RSA validation.
 func (v *RSAValidator) Validate(tokenStr string) (claims.Principal, error) {
 	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (any, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {

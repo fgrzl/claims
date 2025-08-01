@@ -89,8 +89,8 @@ func (cp *principal) Claims() *ClaimSet {
 	return cp.claimSet.Claims()
 }
 
-// SerializablePrincipal represents the serializable fields of a Principal
-// This is used for serializing user principal data in message headers
+// SerializablePrincipal represents the serializable fields of a Principal.
+// This is used for serializing user principal data in message headers.
 type SerializablePrincipal struct {
 	Subject        string   `json:"subject"`
 	Issuer         string   `json:"issuer"`
@@ -105,7 +105,7 @@ type SerializablePrincipal struct {
 	JWTI           string   `json:"jti"`
 }
 
-// ToSerializablePrincipal converts a Principal to a SerializablePrincipal
+// ToSerializablePrincipal converts a Principal to a SerializablePrincipal.
 func ToSerializablePrincipal(p Principal) SerializablePrincipal {
 	return SerializablePrincipal{
 		Subject:        p.Subject(),
@@ -122,7 +122,7 @@ func ToSerializablePrincipal(p Principal) SerializablePrincipal {
 	}
 }
 
-// SerializePrincipal serializes a Principal to JSON string
+// SerializePrincipal serializes a Principal to JSON string.
 func SerializePrincipal(p Principal) (string, error) {
 	serializable := ToSerializablePrincipal(p)
 	data, err := json.Marshal(serializable)
@@ -132,7 +132,7 @@ func SerializePrincipal(p Principal) (string, error) {
 	return string(data), nil
 }
 
-// DeserializePrincipalFields deserializes a JSON string to SerializablePrincipal
+// DeserializePrincipalFields deserializes a JSON string to SerializablePrincipal.
 func DeserializePrincipalFields(jsonStr string) (*SerializablePrincipal, error) {
 	var sp SerializablePrincipal
 	if err := json.Unmarshal([]byte(jsonStr), &sp); err != nil {
@@ -141,12 +141,12 @@ func DeserializePrincipalFields(jsonStr string) (*SerializablePrincipal, error) 
 	return &sp, nil
 }
 
-// ReconstructedPrincipal implements Principal from deserialized data
+// ReconstructedPrincipal implements Principal from deserialized data.
 type ReconstructedPrincipal struct {
 	fields SerializablePrincipal
 }
 
-// NewReconstructedPrincipal creates a new ReconstructedPrincipal from SerializablePrincipal
+// NewReconstructedPrincipal creates a new ReconstructedPrincipal from SerializablePrincipal.
 func NewReconstructedPrincipal(fields SerializablePrincipal) *ReconstructedPrincipal {
 	return &ReconstructedPrincipal{fields: fields}
 }
@@ -193,7 +193,7 @@ func (r *ReconstructedPrincipal) CustomClaimValue(name string) string { return "
 // Claims implements Principal (returns nil for reconstructed principals)
 func (r *ReconstructedPrincipal) Claims() *ClaimSet { return nil }
 
-// DeserializePrincipal deserializes a JSON string to a Principal
+// DeserializePrincipal deserializes a JSON string to a Principal.
 func DeserializePrincipal(jsonStr string) (Principal, error) {
 	fields, err := DeserializePrincipalFields(jsonStr)
 	if err != nil {

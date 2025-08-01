@@ -7,10 +7,12 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+// HMAC256Validator implements the Validator interface using HMAC-SHA256 validation.
 type HMAC256Validator struct {
 	Secret []byte
 }
 
+// Validate implements the Validator interface for HMAC256 validation.
 func (tv *HMAC256Validator) Validate(tokenStr string) (claims.Principal, error) {
 	// Initialize parser with strict decoding
 	parser := jwt.NewParser(jwt.WithStrictDecoding())
