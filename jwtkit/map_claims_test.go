@@ -9,7 +9,6 @@ import (
 	"github.com/fgrzl/claims"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 type signerValidatorPair struct {
@@ -21,11 +20,12 @@ type signerValidatorPair struct {
 
 func generateRSAKeyPair(t *testing.T) (*rsa.PrivateKey, *rsa.PublicKey) {
 	priv, err := rsa.GenerateKey(rand.Reader, 2048)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 	return priv, &priv.PublicKey
 }
 
-func TestJWTSignerBehavior(t *testing.T) {
+func TestShouldSignAndValidateTokensWhenUsingJWTBehavior(t *testing.T) {
+	// Arrange
 	secret := []byte("super-secret-key")
 	rsaPriv1, rsaPub1 := generateRSAKeyPair(t)
 	_, rsaPub2 := generateRSAKeyPair(t)
@@ -51,40 +51,55 @@ func TestJWTSignerBehavior(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run("should create and validate a token "+tc.name, func(t *testing.T) {
+			// Arrange
 			claims := jwt.MapClaims{"tenant_id": "tenant-xyz"}
+
+			// Act
 			token, err := tc.signer.CreateToken(FromMapClaims(claims), time.Minute)
-			require.NoError(t, err)
+
+			// Assert
+			assert.NoError(t, err)
 
 			user, err := tc.validator.Validate(token)
-			require.NoError(t, err)
-			require.Equal(t, "tenant-xyz", user.CustomClaimValue("tenant_id"))
+			assert.NoError(t, err)
+			assert.Equal(t, "tenant-xyz", user.CustomClaimValue("tenant_id"))
 		})
 
 		t.Run("should reject expired tokens "+tc.name, func(t *testing.T) {
+			// Arrange
 			claims := jwt.MapClaims{"tenant_id": "expired"}
+
+			// Act
 			token, err := tc.signer.CreateToken(FromMapClaims(claims), 1*time.Second)
-			require.NoError(t, err)
+			assert.NoError(t, err)
 
 			time.Sleep(2 * time.Second)
 
 			_, err = tc.validator.Validate(token)
-			require.Error(t, err)
-			require.ErrorContains(t, err, "token is expired")
+
+			// Assert
+			assert.Error(t, err)
+			assert.ErrorContains(t, err, "token is expired")
 		})
 
 		t.Run("should reject tokens with invalid signature "+tc.name, func(t *testing.T) {
+			// Arrange
 			claims := jwt.MapClaims{"tenant_id": "bad-sig"}
+
+			// Act
 			token, err := tc.signer.CreateToken(FromMapClaims(claims), time.Minute)
-			require.NoError(t, err)
+			assert.NoError(t, err)
 
 			_, err = tc.mismatchedSig().Validate(token)
-			require.Error(t, err)
-			require.ErrorContains(t, err, "signature is invalid")
+
+			// Assert
+			assert.Error(t, err)
+			assert.ErrorContains(t, err, "signature is invalid")
 		})
 	}
 }
 
-func TestToMapClaims(t *testing.T) {
+func TestShouldConvertClaimsWhenUsingToMapClaims(t *testing.T) {
 	tests := []struct {
 		name        string
 		setupClaims func() *claims.ClaimSet
@@ -173,20 +188,20 @@ func TestToMapClaims(t *testing.T) {
 			// Assert
 			for key, expectedValue := range tt.expected {
 				actualValue, exists := result[key]
-				require.True(t, exists, "Expected key %s to exist in result", key)
+				assert.True(t, exists, "Expected key %s to exist in result", key)
 
 				if key == "exp" && expectedValue == "INJECTED" {
 					// Special case: verify exp was injected and is reasonable
 					expValue, ok := actualValue.(float64)
-					require.True(t, ok, "Expected exp to be float64")
+					assert.True(t, ok, "Expected exp to be float64")
 					expectedExpRange := float64(time.Now().Add(tt.ttl).Unix())
 					assert.InDelta(t, expectedExpRange, expValue, 2.0, "Expected exp to be close to now + TTL")
 				} else if key == "exp" || key == "nbf" || key == "iat" {
 					// Timing claims should be close to expected
 					expectedFloat, ok := expectedValue.(float64)
-					require.True(t, ok)
+					assert.True(t, ok)
 					actualFloat, ok := actualValue.(float64)
-					require.True(t, ok)
+					assert.True(t, ok)
 					assert.InDelta(t, expectedFloat, actualFloat, 2.0, "Timing claim %s should be close to expected", key)
 				} else {
 					assert.Equal(t, expectedValue, actualValue, "Value for key %s should match", key)
@@ -196,7 +211,7 @@ func TestToMapClaims(t *testing.T) {
 	}
 }
 
-func TestFromMapClaims(t *testing.T) {
+func TestShouldCreatePrincipalWhenUsingFromMapClaims(t *testing.T) {
 	tests := []struct {
 		name     string
 		input    jwt.MapClaims
@@ -276,7 +291,8 @@ func TestFromMapClaims(t *testing.T) {
 	}
 }
 
-func TestValidateStandardClaims(t *testing.T) {
+func TestShouldValidateStandardClaimsWhenGivenMapClaims(t *testing.T) {
+	// Arrange
 	now := time.Now().Unix()
 
 	tests := []struct {
@@ -366,10 +382,10 @@ func TestValidateStandardClaims(t *testing.T) {
 
 			// Assert
 			if tt.expectError {
-				require.Error(t, err)
+				assert.Error(t, err)
 				assert.Contains(t, err.Error(), tt.errorText)
 			} else {
-				require.NoError(t, err)
+				assert.NoError(t, err)
 			}
 		})
 	}

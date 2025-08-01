@@ -5,53 +5,65 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/assert"
 )
 
-func TestNewPrincipalFromList(t *testing.T) {
+func TestShouldCreatePrincipalFromListWhenGiven(t *testing.T) {
+	// Arrange
+	claimsList := NewClaimsList("sub", "user123").Add("email", "user@example.com")
 
-	p := NewPrincipalFromList(NewClaimsList("sub", "user123").Add("email", "user@example.com"))
+	// Act
+	p := NewPrincipalFromList(claimsList)
 
-	require.Equal(t, "user123", p.Subject())
-	require.Equal(t, "user@example.com", p.Email())
+	// Assert
+	assert.Equal(t, "user123", p.Subject())
+	assert.Equal(t, "user@example.com", p.Email())
 }
 
-func TestNewPrincipal_ClaimAccess(t *testing.T) {
+func TestShouldAccessClaimsWhenUsingPrincipal(t *testing.T) {
+	// Arrange
 	now := time.Now().Unix()
 	cs := NewClaimsSet("abc123").
 		Set("exp", strconv.FormatInt(now+3600, 10)).
 		Set("aud", "api1,api2").
 		Set("scopes", "read,write")
 
+	// Act
 	p := NewPrincipal(cs)
 
-	require.Equal(t, "abc123", p.Subject())
-	require.ElementsMatch(t, []string{"api1", "api2"}, p.Audience())
-	require.ElementsMatch(t, []string{"read", "write"}, p.Scopes())
-	require.Equal(t, now+3600, p.ExpirationTime())
+	// Assert
+	assert.Equal(t, "abc123", p.Subject())
+	assert.ElementsMatch(t, []string{"api1", "api2"}, p.Audience())
+	assert.ElementsMatch(t, []string{"read", "write"}, p.Scopes())
+	assert.Equal(t, now+3600, p.ExpirationTime())
 }
 
-func TestPrincipal_CustomClaim(t *testing.T) {
+func TestShouldReturnCustomClaimFromPrincipalWhenExists(t *testing.T) {
+	// Arrange
 	cs := NewClaimsSet("tester").Set("foo", "bar")
 	p := NewPrincipal(cs)
 
+	// Act
 	claim := p.CustomClaim("foo")
-	require.Equal(t, "bar", claim.Value())
-
 	val := p.CustomClaimValue("foo")
-	require.Equal(t, "bar", val)
-
 	missing := p.CustomClaim("missing")
-	require.Equal(t, "", missing.Value())
+
+	// Assert
+	assert.Equal(t, "bar", claim.Value())
+	assert.Equal(t, "bar", val)
+	assert.Equal(t, "", missing.Value())
 }
 
-func TestPrincipal_ClaimsCopy(t *testing.T) {
+func TestShouldReturnClaimsCopyWhenRequested(t *testing.T) {
+	// Arrange
 	cs := NewClaimsSet("copyme")
 	p := NewPrincipal(cs)
 
+	// Act
 	claimsMap := p.Claims()
 	claimsMap.SetSubject("tampered")
 
+	// Assert
 	// Original Principal should not be affected
-	require.Equal(t, "copyme", p.Subject())
+	assert.Equal(t, "copyme", p.Subject())
 }

@@ -4,20 +4,23 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
-func TestNewClaimsList(t *testing.T) {
-	// Arrange & Act
-	claimList := NewClaimsList("sub", "user123")
+func TestShouldCreateClaimsListWhenGivenKeyAndValue(t *testing.T) {
+	// Arrange
+	key := "sub"
+	value := "user123"
+
+	// Act
+	claimList := NewClaimsList(key, value)
 
 	// Assert
-	require.Len(t, claimList, 1)
-	assert.Equal(t, "sub", claimList[0].Name())
-	assert.Equal(t, "user123", claimList[0].Value())
+	assert.Len(t, claimList, 1)
+	assert.Equal(t, key, claimList[0].Name())
+	assert.Equal(t, value, claimList[0].Value())
 }
 
-func TestClaimList_Add(t *testing.T) {
+func TestShouldAddClaimWhenGivenKeyAndValue(t *testing.T) {
 	// Arrange
 	claimList := NewClaimsList("sub", "user123")
 
@@ -25,7 +28,7 @@ func TestClaimList_Add(t *testing.T) {
 	updatedList := claimList.Add("email", "user@example.com")
 
 	// Assert
-	require.Len(t, updatedList, 2)
+	assert.Len(t, updatedList, 2)
 	
 	// Check first claim
 	assert.Equal(t, "sub", updatedList[0].Name())
@@ -36,7 +39,7 @@ func TestClaimList_Add(t *testing.T) {
 	assert.Equal(t, "user@example.com", updatedList[1].Value())
 }
 
-func TestClaimList_Add_MultipleClaims(t *testing.T) {
+func TestShouldAddMultipleClaimsWhenChaining(t *testing.T) {
 	// Arrange
 	claimList := NewClaimsList("sub", "user123")
 
@@ -47,7 +50,7 @@ func TestClaimList_Add_MultipleClaims(t *testing.T) {
 		Add("exp", "1234567890")
 
 	// Assert
-	require.Len(t, result, 4)
+	assert.Len(t, result, 4)
 	
 	expectedClaims := map[string]string{
 		"sub":   "user123",
@@ -58,12 +61,12 @@ func TestClaimList_Add_MultipleClaims(t *testing.T) {
 	
 	for _, claim := range result {
 		expectedValue, exists := expectedClaims[claim.Name()]
-		require.True(t, exists, "Unexpected claim: %s", claim.Name())
+		assert.True(t, exists, "Unexpected claim: %s", claim.Name())
 		assert.Equal(t, expectedValue, claim.Value())
 	}
 }
 
-func TestToClaimSet(t *testing.T) {
+func TestShouldConvertToClaimSetWhenGivenClaimList(t *testing.T) {
 	// Arrange
 	claimList := NewClaimsList("sub", "user123").
 		Add("email", "user@example.com").
@@ -73,7 +76,7 @@ func TestToClaimSet(t *testing.T) {
 	claimSet := ToClaimSet(claimList)
 
 	// Assert
-	require.NotNil(t, claimSet)
+	assert.NotNil(t, claimSet)
 	
 	// Check that all claims are accessible in the ClaimSet
 	assert.Equal(t, "user123", claimSet.Subject())
@@ -81,7 +84,7 @@ func TestToClaimSet(t *testing.T) {
 	assert.Equal(t, []string{"admin", "user"}, claimSet.Roles())
 }
 
-func TestToClaimSet_EmptyList(t *testing.T) {
+func TestShouldCreateEmptyClaimSetWhenListIsEmpty(t *testing.T) {
 	// Arrange
 	var claimList ClaimList
 
@@ -89,11 +92,11 @@ func TestToClaimSet_EmptyList(t *testing.T) {
 	claimSet := ToClaimSet(claimList)
 
 	// Assert
-	require.NotNil(t, claimSet)
+	assert.NotNil(t, claimSet)
 	assert.Equal(t, "", claimSet.Subject())
 }
 
-func TestToClaimSet_DuplicateKeys(t *testing.T) {
+func TestShouldOverwriteValueWhenKeyIsDuplicated(t *testing.T) {
 	// Arrange
 	claimList := ClaimList{
 		NewClaim("sub", "user123"),
@@ -110,7 +113,7 @@ func TestToClaimSet_DuplicateKeys(t *testing.T) {
 	assert.Equal(t, "user@example.com", claimSet.Email())
 }
 
-func TestClaimList_Integration_WithClaimSet(t *testing.T) {
+func TestShouldIntegrateWithClaimSetWhenUsingComplexScenario(t *testing.T) {
 	// Arrange
 	claimList := NewClaimsList("sub", "testuser").
 		Add("iss", "test-issuer").

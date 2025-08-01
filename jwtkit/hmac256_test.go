@@ -6,10 +6,9 @@ import (
 
 	"github.com/fgrzl/claims"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
-func TestHMAC256Signer_CreateToken_ShouldCreateValidToken(t *testing.T) {
+func TestShouldCreateValidTokenWhenGivenValidPrincipal(t *testing.T) {
 	// Arrange
 	secret := []byte("super-secret-key")
 	signer := &HMAC256Signer{Secret: secret}
@@ -23,19 +22,19 @@ func TestHMAC256Signer_CreateToken_ShouldCreateValidToken(t *testing.T) {
 	token, err := signer.CreateToken(principal, 5*time.Minute)
 
 	// Assert
-	require.NoError(t, err)
+	assert.NoError(t, err)
 	assert.NotEmpty(t, token)
 	
 	// Verify the token can be validated
 	validator := &HMAC256Validator{Secret: secret}
 	validatedPrincipal, err := validator.Validate(token)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "user123", validatedPrincipal.Subject())
 	assert.Equal(t, "test-issuer", validatedPrincipal.Issuer())
 	assert.Equal(t, "user@example.com", validatedPrincipal.Email())
 }
 
-func TestHMAC256Signer_CreateToken_WithZeroTTL(t *testing.T) {
+func TestShouldCreateTokenWhenGivenZeroTTL(t *testing.T) {
 	// Arrange
 	secret := []byte("super-secret-key")
 	signer := &HMAC256Signer{Secret: secret}
@@ -45,11 +44,11 @@ func TestHMAC256Signer_CreateToken_WithZeroTTL(t *testing.T) {
 	token, err := signer.CreateToken(principal, 0)
 
 	// Assert
-	require.NoError(t, err)
+	assert.NoError(t, err)
 	assert.NotEmpty(t, token)
 }
 
-func TestHMAC256Validator_Validate_ShouldValidateValidToken(t *testing.T) {
+func TestShouldValidateTokenWhenGivenValidSignature(t *testing.T) {
 	// Arrange
 	secret := []byte("super-secret-key")
 	signer := &HMAC256Signer{Secret: secret}
@@ -64,13 +63,13 @@ func TestHMAC256Validator_Validate_ShouldValidateValidToken(t *testing.T) {
 	)
 	
 	token, err := signer.CreateToken(principal, 5*time.Minute)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	// Act
 	validatedPrincipal, err := validator.Validate(token)
 
 	// Assert
-	require.NoError(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "user123", validatedPrincipal.Subject())
 	assert.Equal(t, "test-issuer", validatedPrincipal.Issuer())
 	assert.Equal(t, "user@example.com", validatedPrincipal.Email())
@@ -78,7 +77,7 @@ func TestHMAC256Validator_Validate_ShouldValidateValidToken(t *testing.T) {
 	assert.Equal(t, []string{"read", "write"}, validatedPrincipal.Scopes())
 }
 
-func TestHMAC256Validator_Validate_ShouldRejectInvalidSecret(t *testing.T) {
+func TestShouldRejectTokenWhenGivenInvalidSecret(t *testing.T) {
 	// Arrange
 	secret1 := []byte("secret-key-1")
 	secret2 := []byte("secret-key-2")
@@ -88,7 +87,7 @@ func TestHMAC256Validator_Validate_ShouldRejectInvalidSecret(t *testing.T) {
 	
 	principal := claims.NewPrincipal(claims.NewClaimsSet("user123"))
 	token, err := signer.CreateToken(principal, 5*time.Minute)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	// Act
 	validatedPrincipal, err := validator.Validate(token)
@@ -99,7 +98,7 @@ func TestHMAC256Validator_Validate_ShouldRejectInvalidSecret(t *testing.T) {
 	assert.Contains(t, err.Error(), "failed to parse token")
 }
 
-func TestHMAC256Validator_Validate_ShouldRejectMalformedToken(t *testing.T) {
+func TestShouldRejectTokenWhenMalformed(t *testing.T) {
 	// Arrange
 	secret := []byte("super-secret-key")
 	validator := &HMAC256Validator{Secret: secret}
@@ -113,7 +112,7 @@ func TestHMAC256Validator_Validate_ShouldRejectMalformedToken(t *testing.T) {
 	assert.Contains(t, err.Error(), "failed to parse token")
 }
 
-func TestHMAC256Validator_Validate_ShouldRejectEmptyToken(t *testing.T) {
+func TestShouldRejectTokenWhenEmpty(t *testing.T) {
 	// Arrange
 	secret := []byte("super-secret-key")
 	validator := &HMAC256Validator{Secret: secret}
@@ -127,7 +126,7 @@ func TestHMAC256Validator_Validate_ShouldRejectEmptyToken(t *testing.T) {
 	assert.Contains(t, err.Error(), "failed to parse token")
 }
 
-func TestHMAC256Validator_Validate_ShouldRejectExpiredToken(t *testing.T) {
+func TestShouldRejectTokenWhenExpired(t *testing.T) {
 	// Arrange
 	secret := []byte("super-secret-key")
 	signer := &HMAC256Signer{Secret: secret}
@@ -135,7 +134,7 @@ func TestHMAC256Validator_Validate_ShouldRejectExpiredToken(t *testing.T) {
 	
 	principal := claims.NewPrincipal(claims.NewClaimsSet("user123"))
 	token, err := signer.CreateToken(principal, 1*time.Millisecond)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 	
 	// Wait for token to expire
 	time.Sleep(10 * time.Millisecond)
@@ -149,7 +148,7 @@ func TestHMAC256Validator_Validate_ShouldRejectExpiredToken(t *testing.T) {
 	assert.Contains(t, err.Error(), "token is expired")
 }
 
-func TestHMAC256Validator_Validate_ShouldHandleTokenWithoutExpiration(t *testing.T) {
+func TestShouldFailValidationWhenTokenHasNoExpiration(t *testing.T) {
 	// Arrange
 	secret := []byte("super-secret-key")
 	validator := &HMAC256Validator{Secret: secret}
@@ -160,7 +159,7 @@ func TestHMAC256Validator_Validate_ShouldHandleTokenWithoutExpiration(t *testing
 	
 	signer := &HMAC256Signer{Secret: secret}
 	token, err := signer.CreateToken(principal, 0) // Zero TTL means no expiration will be added
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	// Act
 	validatedPrincipal, err := validator.Validate(token)
@@ -171,7 +170,7 @@ func TestHMAC256Validator_Validate_ShouldHandleTokenWithoutExpiration(t *testing
 	assert.Contains(t, err.Error(), "expiration claim missing or invalid")
 }
 
-func TestHMAC256_Integration_RoundTrip(t *testing.T) {
+func TestShouldCompleteRoundTripWhenUsingHMAC256Integration(t *testing.T) {
 	// Arrange
 	secret := []byte("integration-test-secret")
 	signer := &HMAC256Signer{Secret: secret}
@@ -195,10 +194,10 @@ func TestHMAC256_Integration_RoundTrip(t *testing.T) {
 
 	// Act
 	token, err := signer.CreateToken(principal, 10*time.Minute)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 	
 	validatedPrincipal, err := validator.Validate(token)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	// Assert
 	assert.Equal(t, "integration-user", validatedPrincipal.Subject())

@@ -4,39 +4,54 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
-func TestNewClaimsSet(t *testing.T) {
-	cs := NewClaimsSet("tester").Set("foo", "bar")
+func TestShouldCreateClaimSetWhenGivenSubject(t *testing.T) {
+	// Arrange
+	subject := "tester"
 
-	require.Equal(t, "tester", (cs.state)[sub].Value())
-	require.Equal(t, "bar", (cs.state)["foo"].Value())
+	// Act
+	cs := NewClaimsSet(subject).Set("foo", "bar")
+
+	// Assert
+	assert.Equal(t, subject, (cs.state)[sub].Value())
+	assert.Equal(t, "bar", (cs.state)["foo"].Value())
 }
 
-func TestClaimSetSet(t *testing.T) {
+func TestShouldMutateInstanceWhenSettingClaim(t *testing.T) {
+	// Arrange
 	cs := NewClaimsSet("tester").Set("foo", "bar")
+
+	// Act
 	cs.Set("baz", "qux") // same instance is mutated
 
-	require.Equal(t, "bar", (cs.state)["foo"].Value())
-	require.Equal(t, "qux", (cs.state)["baz"].Value())
+	// Assert
+	assert.Equal(t, "bar", (cs.state)["foo"].Value())
+	assert.Equal(t, "qux", (cs.state)["baz"].Value())
 }
 
-func TestToClaimList(t *testing.T) {
+func TestShouldConvertToClaimListWhenRequested(t *testing.T) {
+	// Arrange
 	cs := NewClaimsSet("tester").Set("a", "1").Set("b", "2")
+
+	// Act
 	list := cs.ToClaimList()
 
+	// Assert
 	names := map[string]bool{}
 	for _, c := range list {
 		names[c.Name()] = true
 	}
-	require.True(t, names["a"])
-	require.True(t, names["b"])
+	assert.True(t, names["a"])
+	assert.True(t, names["b"])
 }
 
-func TestMakeClaimsSet(t *testing.T) {
-	// Arrange & Act
-	cs := MakeClaimsSet(10)
+func TestShouldCreateEmptyClaimSetWhenGivenCapacity(t *testing.T) {
+	// Arrange
+	capacity := 10
+
+	// Act
+	cs := MakeClaimsSet(capacity)
 
 	// Assert
 	assert.NotNil(t, cs)
@@ -44,12 +59,14 @@ func TestMakeClaimsSet(t *testing.T) {
 	assert.Equal(t, 0, len(cs.state))
 }
 
-func TestClaimSet_Get(t *testing.T) {
+func TestShouldGetClaimWhenKeyExists(t *testing.T) {
 	// Arrange
 	cs := NewClaimsSet("user123").Set("email", "user@example.com")
 
-	// Act & Assert
+	// Act
 	claim, exists := cs.Get("email")
+
+	// Assert
 	assert.True(t, exists)
 	assert.Equal(t, "email", claim.Name())
 	assert.Equal(t, "user@example.com", claim.Value())
@@ -60,7 +77,7 @@ func TestClaimSet_Get(t *testing.T) {
 	assert.Nil(t, missingClaim)
 }
 
-func TestClaimSet_Value(t *testing.T) {
+func TestShouldReturnValueWhenKeyExists(t *testing.T) {
 	// Arrange
 	cs := NewClaimsSet("user123").Set("email", "user@example.com")
 
@@ -69,7 +86,7 @@ func TestClaimSet_Value(t *testing.T) {
 	assert.Equal(t, "", cs.Value("missing"))
 }
 
-func TestClaimSet_Range(t *testing.T) {
+func TestShouldIterateClaimsWhenRanging(t *testing.T) {
 	// Arrange
 	cs := NewClaimsSet("user123").Set("email", "user@example.com").Set("role", "admin")
 	collected := make(map[string]string)
@@ -88,7 +105,7 @@ func TestClaimSet_Range(t *testing.T) {
 	assert.Equal(t, expected, collected)
 }
 
-func TestClaimSet_CoreGetters(t *testing.T) {
+func TestShouldReturnCoreClaimsWhenUsingSetter(t *testing.T) {
 	// Arrange
 	cs := NewClaimsSet("user123").
 		SetIssuer("test-issuer").
@@ -110,7 +127,7 @@ func TestClaimSet_CoreGetters(t *testing.T) {
 	assert.Equal(t, int64(1234567850), cs.IssuedAt())
 }
 
-func TestClaimSet_ArrayClaims(t *testing.T) {
+func TestShouldReturnArrayClaimsWhenSet(t *testing.T) {
 	// Arrange
 	cs := NewClaimsSet("user123").
 		SetAudience("api1,api2,api3").
@@ -123,7 +140,7 @@ func TestClaimSet_ArrayClaims(t *testing.T) {
 	assert.Equal(t, []string{"read", "write", "delete"}, cs.Scopes())
 }
 
-func TestClaimSet_AppendRoles(t *testing.T) {
+func TestShouldAppendAndDeduplicateRolesWhenCalling(t *testing.T) {
 	// Arrange
 	cs := NewClaimsSet("user123").SetRoles("user", "guest")
 
@@ -136,7 +153,7 @@ func TestClaimSet_AppendRoles(t *testing.T) {
 	assert.Equal(t, []string{"admin", "guest", "user"}, roles)
 }
 
-func TestClaimSet_AppendScopes(t *testing.T) {
+func TestShouldAppendAndDeduplicateScopesWhenCalling(t *testing.T) {
 	// Arrange
 	cs := NewClaimsSet("user123").SetScopes("read")
 
@@ -149,12 +166,14 @@ func TestClaimSet_AppendScopes(t *testing.T) {
 	assert.Equal(t, []string{"delete", "read", "write"}, scopes)
 }
 
-func TestClaimSet_CustomClaim(t *testing.T) {
+func TestShouldReturnCustomClaimWhenExists(t *testing.T) {
 	// Arrange
 	cs := NewClaimsSet("user123").Set("custom_field", "custom_value")
 
-	// Act & Assert
+	// Act
 	customClaim := cs.CustomClaim("custom_field")
+
+	// Assert
 	assert.Equal(t, "custom_field", customClaim.Name())
 	assert.Equal(t, "custom_value", customClaim.Value())
 
@@ -164,7 +183,7 @@ func TestClaimSet_CustomClaim(t *testing.T) {
 	assert.Equal(t, "", missingClaim.Value())
 }
 
-func TestClaimSet_CustomClaimValue(t *testing.T) {
+func TestShouldReturnCustomClaimValueWhenExists(t *testing.T) {
 	// Arrange
 	cs := NewClaimsSet("user123").Set("custom_field", "custom_value")
 
@@ -173,7 +192,7 @@ func TestClaimSet_CustomClaimValue(t *testing.T) {
 	assert.Equal(t, "", cs.CustomClaimValue("missing_field"))
 }
 
-func TestClaimSet_Claims_ReturnsDeepCopy(t *testing.T) {
+func TestShouldReturnDeepCopyWhenCallingClaims(t *testing.T) {
 	// Arrange
 	original := NewClaimsSet("user123").Set("email", "user@example.com")
 
@@ -192,7 +211,7 @@ func TestClaimSet_Claims_ReturnsDeepCopy(t *testing.T) {
 	assert.Equal(t, "tampered@example.com", copy.Email())
 }
 
-func TestClaimSet_SettersReturnSameInstance(t *testing.T) {
+func TestShouldReturnSameInstanceWhenChainingSetter(t *testing.T) {
 	// Arrange
 	cs := NewClaimsSet("user123")
 	
@@ -208,7 +227,7 @@ func TestClaimSet_SettersReturnSameInstance(t *testing.T) {
 	assert.Equal(t, int64(1234567890), cs.ExpirationTime())
 }
 
-func TestClaimSet_EmptyArrayClaims(t *testing.T) {
+func TestShouldReturnNilWhenArrayClaimsAreEmpty(t *testing.T) {
 	// Arrange
 	cs := NewClaimsSet("user123")
 
@@ -218,7 +237,7 @@ func TestClaimSet_EmptyArrayClaims(t *testing.T) {
 	assert.Nil(t, cs.Scopes())
 }
 
-func TestClaimSet_ArrayClaimsWithEmptyStrings(t *testing.T) {
+func TestShouldPreserveEmptyStringsWhenArrayClaimsContainThem(t *testing.T) {
 	// Arrange
 	cs := NewClaimsSet("user123")
 
@@ -232,7 +251,7 @@ func TestClaimSet_ArrayClaimsWithEmptyStrings(t *testing.T) {
 	assert.Equal(t, []string{"", "read", "", "write", ""}, cs.Scopes())
 }
 
-func TestClaimSet_int64_InvalidValue(t *testing.T) {
+func TestShouldReturnZeroWhenInt64ValueIsInvalid(t *testing.T) {
 	// Arrange
 	cs := NewClaimsSet("user123").Set("exp", "invalid_number")
 
@@ -240,7 +259,7 @@ func TestClaimSet_int64_InvalidValue(t *testing.T) {
 	assert.Equal(t, int64(0), cs.ExpirationTime())
 }
 
-func TestClaimSet_splitList_EmptyClaim(t *testing.T) {
+func TestShouldReturnNilWhenSplitListClaimIsEmpty(t *testing.T) {
 	// Arrange
 	cs := NewClaimsSet("user123")
 

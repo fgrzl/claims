@@ -5,19 +5,22 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
-func TestNewClaim(t *testing.T) {
-	// Arrange & Act
-	claim := NewClaim("test_key", "test_value")
+func TestShouldCreateClaimWhenGivenKeyAndValue(t *testing.T) {
+	// Arrange
+	key := "test_key"
+	value := "test_value"
+
+	// Act
+	claim := NewClaim(key, value)
 
 	// Assert
-	assert.Equal(t, "test_key", claim.Name())
-	assert.Equal(t, "test_value", claim.Value())
+	assert.Equal(t, key, claim.Name())
+	assert.Equal(t, value, claim.Value())
 }
 
-func TestClaim_Values(t *testing.T) {
+func TestShouldSplitValuesWhenGivenSeparator(t *testing.T) {
 	tests := []struct {
 		name      string
 		value     string
@@ -64,7 +67,7 @@ func TestClaim_Values(t *testing.T) {
 	}
 }
 
-func TestClaim_IntValue(t *testing.T) {
+func TestShouldParseIntValueWhenGivenValidString(t *testing.T) {
 	tests := []struct {
 		name          string
 		value         string
@@ -124,7 +127,7 @@ func TestClaim_IntValue(t *testing.T) {
 	}
 }
 
-func TestClaim_Int32Value(t *testing.T) {
+func TestShouldParseInt32ValueWhenGivenValidString(t *testing.T) {
 	tests := []struct {
 		name          string
 		value         string
@@ -166,7 +169,7 @@ func TestClaim_Int32Value(t *testing.T) {
 	}
 }
 
-func TestClaim_Int64Value(t *testing.T) {
+func TestShouldParseInt64ValueWhenGivenValidString(t *testing.T) {
 	tests := []struct {
 		name          string
 		value         string
@@ -208,7 +211,7 @@ func TestClaim_Int64Value(t *testing.T) {
 	}
 }
 
-func TestClaim_Float64Value(t *testing.T) {
+func TestShouldParseFloat64ValueWhenGivenValidString(t *testing.T) {
 	tests := []struct {
 		name            string
 		value           string
@@ -262,7 +265,7 @@ func TestClaim_Float64Value(t *testing.T) {
 	}
 }
 
-func TestClaim_Float64Value_NilClaim(t *testing.T) {
+func TestShouldReturnZeroWhenClaimIsNil(t *testing.T) {
 	// Arrange
 	var claim *claim
 
@@ -274,7 +277,7 @@ func TestClaim_Float64Value_NilClaim(t *testing.T) {
 	assert.False(t, valid)
 }
 
-func TestClaim_BoolValue(t *testing.T) {
+func TestShouldParseBoolValueWhenGivenValidString(t *testing.T) {
 	tests := []struct {
 		name         string
 		value        string
@@ -328,7 +331,7 @@ func TestClaim_BoolValue(t *testing.T) {
 	}
 }
 
-func TestClaim_UUIDValue(t *testing.T) {
+func TestShouldParseUUIDValueWhenGivenValidString(t *testing.T) {
 	// Arrange
 	validUUIDStr := "123e4567-e89b-12d3-a456-426614174000"
 	validUUID := uuid.MustParse(validUUIDStr)
@@ -374,7 +377,7 @@ func TestClaim_UUIDValue(t *testing.T) {
 	}
 }
 
-func TestClaim_MarshalJSON_ShouldReturnError(t *testing.T) {
+func TestShouldReturnErrorWhenMarshalingToJSON(t *testing.T) {
 	// Arrange
 	claim := NewClaim("test", "value").(*claim)
 
@@ -383,11 +386,11 @@ func TestClaim_MarshalJSON_ShouldReturnError(t *testing.T) {
 
 	// Assert
 	assert.Nil(t, result)
-	require.Error(t, err)
+	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "ClaimSet should not be marshaled to JSON")
 }
 
-func TestClaim_UnmarshalJSON_ShouldReturnError(t *testing.T) {
+func TestShouldReturnErrorWhenUnmarshalingFromJSON(t *testing.T) {
 	// Arrange
 	claim := NewClaim("test", "value").(*claim)
 	jsonData := []byte(`{"test": "value"}`)
@@ -396,6 +399,6 @@ func TestClaim_UnmarshalJSON_ShouldReturnError(t *testing.T) {
 	err := claim.UnmarshalJSON(jsonData)
 
 	// Assert
-	require.Error(t, err)
+	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "ClaimSet should not be unmarshaled from JSON")
 }

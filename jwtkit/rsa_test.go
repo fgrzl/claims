@@ -12,13 +12,12 @@ import (
 
 	"github.com/fgrzl/claims"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func createTempRSAKeyFile(t *testing.T, isPrivate bool) string {
 	// Arrange
 	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	tempDir := t.TempDir()
 	
@@ -43,16 +42,16 @@ func createTempRSAKeyFile(t *testing.T, isPrivate bool) string {
 
 	keyPath := filepath.Join(tempDir, filename)
 	keyFile, err := os.Create(keyPath)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 	defer keyFile.Close()
 
 	err = pem.Encode(keyFile, keyBlock)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	return keyPath
 }
 
-func TestLoadPrivateKey_ShouldLoadValidKey(t *testing.T) {
+func TestShouldLoadPrivateKeyWhenGivenValidFile(t *testing.T) {
 	// Arrange
 	keyPath := createTempRSAKeyFile(t, true)
 
@@ -60,12 +59,12 @@ func TestLoadPrivateKey_ShouldLoadValidKey(t *testing.T) {
 	privateKey, err := LoadPrivateKey(keyPath)
 
 	// Assert
-	require.NoError(t, err)
+	assert.NoError(t, err)
 	assert.NotNil(t, privateKey)
 	assert.Equal(t, 2048, privateKey.N.BitLen())
 }
 
-func TestLoadPrivateKey_ShouldReturnErrorForNonExistentFile(t *testing.T) {
+func TestShouldReturnErrorWhenPrivateKeyFileDoesNotExist(t *testing.T) {
 	// Arrange
 	nonExistentPath := "/path/that/does/not/exist.pem"
 
@@ -77,12 +76,12 @@ func TestLoadPrivateKey_ShouldReturnErrorForNonExistentFile(t *testing.T) {
 	assert.Nil(t, privateKey)
 }
 
-func TestLoadPrivateKey_ShouldReturnErrorForInvalidPEM(t *testing.T) {
+func TestShouldReturnErrorWhenPrivateKeyPEMIsInvalid(t *testing.T) {
 	// Arrange
 	tempDir := t.TempDir()
 	invalidKeyPath := filepath.Join(tempDir, "invalid.pem")
 	err := os.WriteFile(invalidKeyPath, []byte("not a valid PEM file"), 0644)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	// Act
 	privateKey, err := LoadPrivateKey(invalidKeyPath)
@@ -93,7 +92,7 @@ func TestLoadPrivateKey_ShouldReturnErrorForInvalidPEM(t *testing.T) {
 	assert.Nil(t, privateKey)
 }
 
-func TestLoadPublicKey_ShouldLoadValidKey(t *testing.T) {
+func TestShouldLoadPublicKeyWhenGivenValidFile(t *testing.T) {
 	// Arrange
 	keyPath := createTempRSAKeyFile(t, false)
 
@@ -101,12 +100,12 @@ func TestLoadPublicKey_ShouldLoadValidKey(t *testing.T) {
 	publicKey, err := LoadPublicKey(keyPath)
 
 	// Assert
-	require.NoError(t, err)
+	assert.NoError(t, err)
 	assert.NotNil(t, publicKey)
 	assert.Equal(t, 2048, publicKey.N.BitLen())
 }
 
-func TestLoadPublicKey_ShouldReturnErrorForNonExistentFile(t *testing.T) {
+func TestShouldReturnErrorWhenPublicKeyFileDoesNotExist(t *testing.T) {
 	// Arrange
 	nonExistentPath := "/path/that/does/not/exist.pem"
 
@@ -118,12 +117,12 @@ func TestLoadPublicKey_ShouldReturnErrorForNonExistentFile(t *testing.T) {
 	assert.Nil(t, publicKey)
 }
 
-func TestLoadPublicKey_ShouldReturnErrorForInvalidPEM(t *testing.T) {
+func TestShouldReturnErrorWhenPublicKeyPEMIsInvalid(t *testing.T) {
 	// Arrange
 	tempDir := t.TempDir()
 	invalidKeyPath := filepath.Join(tempDir, "invalid.pem")
 	err := os.WriteFile(invalidKeyPath, []byte("not a valid PEM file"), 0644)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	// Act
 	publicKey, err := LoadPublicKey(invalidKeyPath)
@@ -134,10 +133,10 @@ func TestLoadPublicKey_ShouldReturnErrorForInvalidPEM(t *testing.T) {
 	assert.Nil(t, publicKey)
 }
 
-func TestRSASigner_CreateToken_ShouldCreateValidToken(t *testing.T) {
+func TestShouldCreateValidTokenWhenGivenRSAPrivateKey(t *testing.T) {
 	// Arrange
 	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 	
 	signer := &RSASigner{PrivateKey: privateKey}
 	principal := claims.NewPrincipal(claims.NewClaimsSet("user123").SetIssuer("test-issuer"))
@@ -146,21 +145,21 @@ func TestRSASigner_CreateToken_ShouldCreateValidToken(t *testing.T) {
 	token, err := signer.CreateToken(principal, 5*time.Minute)
 
 	// Assert
-	require.NoError(t, err)
+	assert.NoError(t, err)
 	assert.NotEmpty(t, token)
 	
 	// Verify the token can be validated
 	validator := &RSAValidator{PublicKey: &privateKey.PublicKey}
 	validatedPrincipal, err := validator.Validate(token)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "user123", validatedPrincipal.Subject())
 	assert.Equal(t, "test-issuer", validatedPrincipal.Issuer())
 }
 
-func TestRSAValidator_Validate_ShouldValidateValidToken(t *testing.T) {
+func TestShouldValidateTokenWhenGivenValidRSASignature(t *testing.T) {
 	// Arrange
 	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 	
 	signer := &RSASigner{PrivateKey: privateKey}
 	validator := &RSAValidator{PublicKey: &privateKey.PublicKey}
@@ -172,31 +171,31 @@ func TestRSAValidator_Validate_ShouldValidateValidToken(t *testing.T) {
 	)
 	
 	token, err := signer.CreateToken(principal, 5*time.Minute)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	// Act
 	validatedPrincipal, err := validator.Validate(token)
 
 	// Assert
-	require.NoError(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "user123", validatedPrincipal.Subject())
 	assert.Equal(t, "test-issuer", validatedPrincipal.Issuer())
 	assert.Equal(t, "user@example.com", validatedPrincipal.Email())
 }
 
-func TestRSAValidator_Validate_ShouldRejectInvalidSignature(t *testing.T) {
+func TestShouldRejectTokenWhenGivenInvalidRSASignature(t *testing.T) {
 	// Arrange
 	privateKey1, err := rsa.GenerateKey(rand.Reader, 2048)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 	privateKey2, err := rsa.GenerateKey(rand.Reader, 2048)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 	
 	signer := &RSASigner{PrivateKey: privateKey1}
 	validator := &RSAValidator{PublicKey: &privateKey2.PublicKey} // Different key
 	
 	principal := claims.NewPrincipal(claims.NewClaimsSet("user123"))
 	token, err := signer.CreateToken(principal, 5*time.Minute)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	// Act
 	validatedPrincipal, err := validator.Validate(token)
@@ -207,10 +206,10 @@ func TestRSAValidator_Validate_ShouldRejectInvalidSignature(t *testing.T) {
 	assert.Contains(t, err.Error(), "signature is invalid")
 }
 
-func TestRSAValidator_Validate_ShouldRejectMalformedToken(t *testing.T) {
+func TestShouldRejectTokenWhenMalformedForRSA(t *testing.T) {
 	// Arrange
 	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 	validator := &RSAValidator{PublicKey: &privateKey.PublicKey}
 
 	// Act
@@ -221,17 +220,17 @@ func TestRSAValidator_Validate_ShouldRejectMalformedToken(t *testing.T) {
 	assert.Nil(t, validatedPrincipal)
 }
 
-func TestRSAValidator_Validate_ShouldRejectNonRSAToken(t *testing.T) {
+func TestShouldRejectHMACTokenWhenUsingRSAValidator(t *testing.T) {
 	// Arrange
 	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 	validator := &RSAValidator{PublicKey: &privateKey.PublicKey}
 	
 	// Create an HMAC token instead
 	hmacSigner := &HMAC256Signer{Secret: []byte("secret")}
 	principal := claims.NewPrincipal(claims.NewClaimsSet("user123"))
 	hmacToken, err := hmacSigner.CreateToken(principal, 5*time.Minute)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	// Act
 	validatedPrincipal, err := validator.Validate(hmacToken)
