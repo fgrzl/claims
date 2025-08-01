@@ -1,5 +1,9 @@
 package claims
 
+import (
+	"encoding/json"
+)
+
 // Principal represents an authenticated identity with associated claims.
 type Principal interface {
 	// Subject returns the unique identifier for the subject (e.g., user ID).
@@ -83,4 +87,117 @@ func (cp *principal) CustomClaimValue(name string) string {
 }
 func (cp *principal) Claims() *ClaimSet {
 	return cp.claimSet.Claims()
+}
+
+// SerializablePrincipal represents the serializable fields of a Principal
+// This is used for serializing user principal data in message headers
+type SerializablePrincipal struct {
+	Subject        string   `json:"subject"`
+	Issuer         string   `json:"issuer"`
+	Audience       []string `json:"audience"`
+	Scopes         []string `json:"scopes"`
+	Roles          []string `json:"roles"`
+	Email          string   `json:"email"`
+	Username       string   `json:"username"`
+	ExpirationTime int64    `json:"exp"`
+	NotBefore      int64    `json:"nbf"`
+	IssuedAt       int64    `json:"iat"`
+	JWTI           string   `json:"jti"`
+}
+
+// ToSerializablePrincipal converts a Principal to a SerializablePrincipal
+func ToSerializablePrincipal(p Principal) SerializablePrincipal {
+	return SerializablePrincipal{
+		Subject:        p.Subject(),
+		Issuer:         p.Issuer(),
+		Audience:       p.Audience(),
+		Scopes:         p.Scopes(),
+		Roles:          p.Roles(),
+		Email:          p.Email(),
+		Username:       p.Username(),
+		ExpirationTime: p.ExpirationTime(),
+		NotBefore:      p.NotBefore(),
+		IssuedAt:       p.IssuedAt(),
+		JWTI:           p.JWTI(),
+	}
+}
+
+// SerializePrincipal serializes a Principal to JSON string
+func SerializePrincipal(p Principal) (string, error) {
+	serializable := ToSerializablePrincipal(p)
+	data, err := json.Marshal(serializable)
+	if err != nil {
+		return "", err
+	}
+	return string(data), nil
+}
+
+// DeserializePrincipalFields deserializes a JSON string to SerializablePrincipal
+func DeserializePrincipalFields(jsonStr string) (*SerializablePrincipal, error) {
+	var sp SerializablePrincipal
+	if err := json.Unmarshal([]byte(jsonStr), &sp); err != nil {
+		return nil, err
+	}
+	return &sp, nil
+}
+
+// ReconstructedPrincipal implements Principal from deserialized data
+type ReconstructedPrincipal struct {
+	fields SerializablePrincipal
+}
+
+// NewReconstructedPrincipal creates a new ReconstructedPrincipal from SerializablePrincipal
+func NewReconstructedPrincipal(fields SerializablePrincipal) *ReconstructedPrincipal {
+	return &ReconstructedPrincipal{fields: fields}
+}
+
+// Subject implements Principal
+func (r *ReconstructedPrincipal) Subject() string { return r.fields.Subject }
+
+// Issuer implements Principal
+func (r *ReconstructedPrincipal) Issuer() string { return r.fields.Issuer }
+
+// Audience implements Principal
+func (r *ReconstructedPrincipal) Audience() []string { return r.fields.Audience }
+
+// ExpirationTime implements Principal
+func (r *ReconstructedPrincipal) ExpirationTime() int64 { return r.fields.ExpirationTime }
+
+// NotBefore implements Principal
+func (r *ReconstructedPrincipal) NotBefore() int64 { return r.fields.NotBefore }
+
+// IssuedAt implements Principal
+func (r *ReconstructedPrincipal) IssuedAt() int64 { return r.fields.IssuedAt }
+
+// JWTI implements Principal
+func (r *ReconstructedPrincipal) JWTI() string { return r.fields.JWTI }
+
+// Scopes implements Principal
+func (r *ReconstructedPrincipal) Scopes() []string { return r.fields.Scopes }
+
+// Roles implements Principal
+func (r *ReconstructedPrincipal) Roles() []string { return r.fields.Roles }
+
+// Email implements Principal
+func (r *ReconstructedPrincipal) Email() string { return r.fields.Email }
+
+// Username implements Principal
+func (r *ReconstructedPrincipal) Username() string { return r.fields.Username }
+
+// CustomClaim implements Principal (returns nil for reconstructed principals)
+func (r *ReconstructedPrincipal) CustomClaim(name string) Claim { return nil }
+
+// CustomClaimValue implements Principal (returns empty string for reconstructed principals)
+func (r *ReconstructedPrincipal) CustomClaimValue(name string) string { return "" }
+
+// Claims implements Principal (returns nil for reconstructed principals)
+func (r *ReconstructedPrincipal) Claims() *ClaimSet { return nil }
+
+// DeserializePrincipal deserializes a JSON string to a Principal
+func DeserializePrincipal(jsonStr string) (Principal, error) {
+	fields, err := DeserializePrincipalFields(jsonStr)
+	if err != nil {
+		return nil, err
+	}
+	return NewReconstructedPrincipal(*fields), nil
 }
