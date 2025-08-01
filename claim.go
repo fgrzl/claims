@@ -8,6 +8,8 @@ import (
 	"github.com/google/uuid"
 )
 
+// Claim represents a single claim in a JWT token or claim set.
+// It provides methods to access the claim's name and value in various formats.
 type Claim interface {
 	// Returns the name of the claim (e.g., "sub", "iss", "aud").
 	Name() string
@@ -37,6 +39,7 @@ type Claim interface {
 	UUIDValue() (uuid.UUID, bool)
 }
 
+// NewClaim creates a new Claim with the specified name and value.
 func NewClaim(name, value string) Claim {
 	return &claim{
 		name:  name,

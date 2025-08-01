@@ -9,6 +9,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+// ToMapClaims converts a Principal and TTL to jwt.MapClaims for token creation.
 func ToMapClaims(principal claims.Principal, ttl time.Duration) jwt.MapClaims {
 	mapClaims := jwt.MapClaims{}
 
@@ -35,6 +36,7 @@ func ToMapClaims(principal claims.Principal, ttl time.Duration) jwt.MapClaims {
 	return mapClaims
 }
 
+// FromMapClaims converts jwt.MapClaims to a Principal.
 func FromMapClaims(raw jwt.MapClaims) claims.Principal {
 	cs := claims.MakeClaimsSet(len(raw))
 

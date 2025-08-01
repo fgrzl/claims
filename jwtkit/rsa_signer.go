@@ -12,6 +12,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+// LoadPrivateKey loads an RSA private key from a PEM file.
 func LoadPrivateKey(path string) (*rsa.PrivateKey, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -24,10 +25,12 @@ func LoadPrivateKey(path string) (*rsa.PrivateKey, error) {
 	return x509.ParsePKCS1PrivateKey(block.Bytes)
 }
 
+// RSASigner implements the Signer interface using RSA-SHA256 signing.
 type RSASigner struct {
 	PrivateKey *rsa.PrivateKey
 }
 
+// CreateToken implements the Signer interface for RSA signing.
 func (s *RSASigner) CreateToken(principal claims.Principal, ttl time.Duration) (string, error) {
 	mapClaims := ToMapClaims(principal, ttl)
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, mapClaims)
