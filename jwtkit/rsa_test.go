@@ -20,11 +20,11 @@ func createTempRSAKeyFile(t *testing.T, isPrivate bool) string {
 	assert.NoError(t, err)
 
 	tempDir := t.TempDir()
-	
+
 	var keyBytes []byte
 	var keyType string
 	var filename string
-	
+
 	if isPrivate {
 		keyBytes = x509.MarshalPKCS1PrivateKey(privateKey)
 		keyType = "RSA PRIVATE KEY"
@@ -137,7 +137,7 @@ func TestShouldCreateValidTokenWhenGivenRSAPrivateKey(t *testing.T) {
 	// Arrange
 	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
 	assert.NoError(t, err)
-	
+
 	signer := &RSASigner{PrivateKey: privateKey}
 	principal := claims.NewPrincipal(claims.NewClaimsSet("user123").SetIssuer("test-issuer"))
 
@@ -147,7 +147,7 @@ func TestShouldCreateValidTokenWhenGivenRSAPrivateKey(t *testing.T) {
 	// Assert
 	assert.NoError(t, err)
 	assert.NotEmpty(t, token)
-	
+
 	// Verify the token can be validated
 	validator := &RSAValidator{PublicKey: &privateKey.PublicKey}
 	validatedPrincipal, err := validator.Validate(token)
@@ -160,16 +160,16 @@ func TestShouldValidateTokenWhenGivenValidRSASignature(t *testing.T) {
 	// Arrange
 	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
 	assert.NoError(t, err)
-	
+
 	signer := &RSASigner{PrivateKey: privateKey}
 	validator := &RSAValidator{PublicKey: &privateKey.PublicKey}
-	
+
 	principal := claims.NewPrincipal(
 		claims.NewClaimsSet("user123").
 			SetIssuer("test-issuer").
 			SetEmail("user@example.com"),
 	)
-	
+
 	token, err := signer.CreateToken(principal, 5*time.Minute)
 	assert.NoError(t, err)
 
@@ -189,10 +189,10 @@ func TestShouldRejectTokenWhenGivenInvalidRSASignature(t *testing.T) {
 	assert.NoError(t, err)
 	privateKey2, err := rsa.GenerateKey(rand.Reader, 2048)
 	assert.NoError(t, err)
-	
+
 	signer := &RSASigner{PrivateKey: privateKey1}
 	validator := &RSAValidator{PublicKey: &privateKey2.PublicKey} // Different key
-	
+
 	principal := claims.NewPrincipal(claims.NewClaimsSet("user123"))
 	token, err := signer.CreateToken(principal, 5*time.Minute)
 	assert.NoError(t, err)
@@ -225,7 +225,7 @@ func TestShouldRejectHMACTokenWhenUsingRSAValidator(t *testing.T) {
 	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
 	assert.NoError(t, err)
 	validator := &RSAValidator{PublicKey: &privateKey.PublicKey}
-	
+
 	// Create an HMAC token instead
 	hmacSigner := &HMAC256Signer{Secret: []byte("secret")}
 	principal := claims.NewPrincipal(claims.NewClaimsSet("user123"))
