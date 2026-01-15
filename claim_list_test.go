@@ -29,11 +29,11 @@ func TestShouldAddClaimWhenGivenKeyAndValue(t *testing.T) {
 
 	// Assert
 	assert.Len(t, updatedList, 2)
-	
+
 	// Check first claim
 	assert.Equal(t, "sub", updatedList[0].Name())
 	assert.Equal(t, "user123", updatedList[0].Value())
-	
+
 	// Check second claim
 	assert.Equal(t, "email", updatedList[1].Name())
 	assert.Equal(t, "user@example.com", updatedList[1].Value())
@@ -51,14 +51,14 @@ func TestShouldAddMultipleClaimsWhenChaining(t *testing.T) {
 
 	// Assert
 	assert.Len(t, result, 4)
-	
+
 	expectedClaims := map[string]string{
 		"sub":   "user123",
 		"email": "user@example.com",
 		"roles": "admin,user",
 		"exp":   "1234567890",
 	}
-	
+
 	for _, claim := range result {
 		expectedValue, exists := expectedClaims[claim.Name()]
 		assert.True(t, exists, "Unexpected claim: %s", claim.Name())
@@ -77,7 +77,7 @@ func TestShouldConvertToClaimSetWhenGivenClaimList(t *testing.T) {
 
 	// Assert
 	assert.NotNil(t, claimSet)
-	
+
 	// Check that all claims are accessible in the ClaimSet
 	assert.Equal(t, "user123", claimSet.Subject())
 	assert.Equal(t, "user@example.com", claimSet.Email())

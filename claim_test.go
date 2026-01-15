@@ -279,39 +279,39 @@ func TestShouldReturnZeroWhenClaimIsNil(t *testing.T) {
 
 func TestShouldParseBoolValueWhenGivenValidString(t *testing.T) {
 	tests := []struct {
-		name         string
-		value        string
-		expectedBool bool
+		name          string
+		value         string
+		expectedBool  bool
 		expectedValid bool
 	}{
 		{
-			name:         "should parse true",
-			value:        "true",
-			expectedBool: true,
+			name:          "should parse true",
+			value:         "true",
+			expectedBool:  true,
 			expectedValid: true,
 		},
 		{
-			name:         "should parse false",
-			value:        "false",
-			expectedBool: false,
+			name:          "should parse false",
+			value:         "false",
+			expectedBool:  false,
 			expectedValid: true,
 		},
 		{
-			name:         "should parse 1 as true",
-			value:        "1",
-			expectedBool: true,
+			name:          "should parse 1 as true",
+			value:         "1",
+			expectedBool:  true,
 			expectedValid: true,
 		},
 		{
-			name:         "should parse 0 as false",
-			value:        "0",
-			expectedBool: false,
+			name:          "should parse 0 as false",
+			value:         "0",
+			expectedBool:  false,
 			expectedValid: true,
 		},
 		{
-			name:         "should return false for invalid string",
-			value:        "invalid",
-			expectedBool: false,
+			name:          "should return false for invalid string",
+			value:         "invalid",
+			expectedBool:  false,
 			expectedValid: false,
 		},
 	}
@@ -337,27 +337,27 @@ func TestShouldParseUUIDValueWhenGivenValidString(t *testing.T) {
 	validUUID := uuid.MustParse(validUUIDStr)
 
 	tests := []struct {
-		name         string
-		value        string
-		expectedUUID uuid.UUID
+		name          string
+		value         string
+		expectedUUID  uuid.UUID
 		expectedValid bool
 	}{
 		{
-			name:         "should parse valid UUID",
-			value:        validUUIDStr,
-			expectedUUID: validUUID,
+			name:          "should parse valid UUID",
+			value:         validUUIDStr,
+			expectedUUID:  validUUID,
 			expectedValid: true,
 		},
 		{
-			name:         "should return false for invalid UUID",
-			value:        "invalid-uuid",
-			expectedUUID: uuid.UUID{},
+			name:          "should return false for invalid UUID",
+			value:         "invalid-uuid",
+			expectedUUID:  uuid.UUID{},
 			expectedValid: false,
 		},
 		{
-			name:         "should return false for empty string",
-			value:        "",
-			expectedUUID: uuid.UUID{},
+			name:          "should return false for empty string",
+			value:         "",
+			expectedUUID:  uuid.UUID{},
 			expectedValid: false,
 		},
 	}

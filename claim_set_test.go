@@ -205,7 +205,7 @@ func TestShouldReturnDeepCopyWhenCallingClaims(t *testing.T) {
 	// Original should not be affected
 	assert.Equal(t, "user123", original.Subject())
 	assert.Equal(t, "user@example.com", original.Email())
-	
+
 	// Copy should have the changes
 	assert.Equal(t, "tampered", copy.Subject())
 	assert.Equal(t, "tampered@example.com", copy.Email())
@@ -214,7 +214,7 @@ func TestShouldReturnDeepCopyWhenCallingClaims(t *testing.T) {
 func TestShouldReturnSameInstanceWhenChainingSetter(t *testing.T) {
 	// Arrange
 	cs := NewClaimsSet("user123")
-	
+
 	// Act - test method chaining
 	result := cs.SetIssuer("test-issuer").
 		SetEmail("user@example.com").
