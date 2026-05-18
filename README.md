@@ -172,9 +172,11 @@ principal := claims.NewPrincipal(cs)
 
 ## Documentation
 
-- **[Complete Guide](docs/README.md)** - Comprehensive documentation with examples
-- **[JWT Integration](docs/jwt-integration.md)** - Detailed JWT usage patterns
-- **[API Reference](docs/api-reference.md)** - Complete API documentation
+- **[Documentation index](docs/README.md)** — overview, getting started, API reference
+- **[Overview](docs/overview.md)** — Claim, ClaimSet, Principal model
+- **[Getting started](docs/getting-started.md)** — sign and validate JWTs
+- **[JWT integration](docs/jwt-integration.md)** — HMAC/RSA patterns
+- **[API reference](docs/api-reference.md)** — types and methods
 
 ## Examples
 
