@@ -9,13 +9,23 @@ go get github.com/fgrzl/claims
 ## Build a principal
 
 ```go
+import (
+    "time"
+
+    "github.com/fgrzl/claims"
+    "github.com/fgrzl/claims/jwtkit"
+)
+
 cs := claims.NewClaimsSet("user123").
     SetIssuer("myapp").
     SetEmail("user@example.com").
-    SetRoles("admin", "user")
+    SetRoles("admin", "user").
+    Set("department", "engineering")
 
 principal := claims.NewPrincipal(cs)
 ```
+
+Set custom claims on `ClaimSet` **before** `NewPrincipal` — the principal holds a copy; mutating `cs` afterward does not change the principal.
 
 ## Sign a JWT (HMAC)
 
@@ -37,10 +47,9 @@ if err != nil {
 _ = validated.Subject()
 ```
 
-## Custom claims
+## Custom claims on principal
 
 ```go
-cs.Set("department", "engineering")
 dept := principal.CustomClaimValue("department")
 ```
 
