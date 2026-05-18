@@ -14,8 +14,8 @@ type ClaimSet struct {
 }
 
 // MakeClaimsSet creates a new ClaimSet with the specified initial capacity.
-func MakeClaimsSet(len int) *ClaimSet {
-	return &ClaimSet{state: make(map[string]Claim, len)}
+func MakeClaimsSet(capacity int) *ClaimSet {
+	return &ClaimSet{state: make(map[string]Claim, capacity)}
 }
 
 // NewClaimsSet creates a new ClaimSet with a subject claim.

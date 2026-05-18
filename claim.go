@@ -73,7 +73,6 @@ func (c *claim) IntValue() (int, bool) {
 func (c *claim) Int32Value() (int32, bool) {
 	r, err := strconv.ParseInt(c.value, 10, 32)
 	if err != nil {
-
 		return 0, false
 	}
 	return int32(r), true

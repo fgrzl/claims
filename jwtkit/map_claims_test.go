@@ -190,20 +190,27 @@ func TestShouldConvertClaimsWhenUsingToMapClaims(t *testing.T) {
 				actualValue, exists := result[key]
 				assert.True(t, exists, "Expected key %s to exist in result", key)
 
-				if key == "exp" && expectedValue == "INJECTED" {
-					// Special case: verify exp was injected and is reasonable
-					expValue, ok := actualValue.(float64)
-					assert.True(t, ok, "Expected exp to be float64")
-					expectedExpRange := float64(time.Now().Add(tt.ttl).Unix())
-					assert.InDelta(t, expectedExpRange, expValue, 2.0, "Expected exp to be close to now + TTL")
-				} else if key == "exp" || key == "nbf" || key == "iat" {
-					// Timing claims should be close to expected
+				switch key {
+				case "exp":
+					if expectedValue == "INJECTED" {
+						expValue, ok := actualValue.(float64)
+						assert.True(t, ok, "Expected exp to be float64")
+						expectedExpRange := float64(time.Now().Add(tt.ttl).Unix())
+						assert.InDelta(t, expectedExpRange, expValue, 2.0, "Expected exp to be close to now + TTL")
+						continue
+					}
 					expectedFloat, ok := expectedValue.(float64)
 					assert.True(t, ok)
 					actualFloat, ok := actualValue.(float64)
 					assert.True(t, ok)
 					assert.InDelta(t, expectedFloat, actualFloat, 2.0, "Timing claim %s should be close to expected", key)
-				} else {
+				case "nbf", "iat":
+					expectedFloat, ok := expectedValue.(float64)
+					assert.True(t, ok)
+					actualFloat, ok := actualValue.(float64)
+					assert.True(t, ok)
+					assert.InDelta(t, expectedFloat, actualFloat, 2.0, "Timing claim %s should be close to expected", key)
+				default:
 					assert.Equal(t, expectedValue, actualValue, "Value for key %s should match", key)
 				}
 			}

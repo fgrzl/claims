@@ -6,7 +6,6 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
-	"os"
 
 	"github.com/fgrzl/claims"
 	"github.com/golang-jwt/jwt/v5"
@@ -19,7 +18,7 @@ type RSAValidator struct {
 
 // LoadPublicKey loads an RSA public key from a PEM file.
 func LoadPublicKey(path string) (*rsa.PublicKey, error) {
-	data, err := os.ReadFile(path)
+	data, err := readPEMFile(path)
 	if err != nil {
 		return nil, err
 	}

@@ -43,7 +43,7 @@ func createTempRSAKeyFile(t *testing.T, isPrivate bool) string {
 	keyPath := filepath.Join(tempDir, filename)
 	keyFile, err := os.Create(keyPath)
 	assert.NoError(t, err)
-	defer keyFile.Close()
+	defer func() { _ = keyFile.Close() }()
 
 	err = pem.Encode(keyFile, keyBlock)
 	assert.NoError(t, err)

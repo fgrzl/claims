@@ -5,7 +5,6 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"errors"
-	"os"
 	"time"
 
 	"github.com/fgrzl/claims"
@@ -14,7 +13,7 @@ import (
 
 // LoadPrivateKey loads an RSA private key from a PEM file.
 func LoadPrivateKey(path string) (*rsa.PrivateKey, error) {
-	data, err := os.ReadFile(path)
+	data, err := readPEMFile(path)
 	if err != nil {
 		return nil, err
 	}

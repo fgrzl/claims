@@ -65,13 +65,12 @@ func FromMapClaims(raw jwt.MapClaims) claims.Principal {
 func ValidateStandardClaims(claims jwt.MapClaims) error {
 	now := time.Now().Unix()
 
-	// Require and check "exp"
-	if exp, ok := claims["exp"].(float64); ok {
-		if now > int64(exp) {
-			return fmt.Errorf("token has expired")
-		}
-	} else {
+	exp, ok := claims["exp"].(float64)
+	if !ok {
 		return fmt.Errorf("expiration claim missing or invalid")
+	}
+	if now > int64(exp) {
+		return fmt.Errorf("token has expired")
 	}
 
 	// Optional: "nbf" (not before)
